@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   title: 'Saggin Planning',
-  description: 'Gestione planning trasporti',
+  description: 'Gestione planning trasporti Saggin',
 }
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it">
-      <body className={`${spaceGrotesk.variable} ${inter.variable} antialiased bg-[#0E0F11] text-[#F5F5F4]`}>
+      <body className={`${spaceGrotesk.variable} ${inter.variable} antialiased bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-primary)] min-h-screen`}>
         <Providers>
           {children}
         </Providers>

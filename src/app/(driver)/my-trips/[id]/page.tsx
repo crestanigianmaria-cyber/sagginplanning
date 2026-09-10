@@ -158,7 +158,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
   const lat = trip.latitude || 45.4642
   const lng = trip.longitude || 9.1900
-  const mapboxStaticUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+e31e24(${lng},${lat})/${lng},${lat},14,0/600x300@2x?access_token=${token}`
+  const mapboxStaticUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+e31e24(${lng},${lat})/${lng},${lat},14,0/600x300@2x?access_token=${token}`
 
   return (
     <div className="min-h-screen bg-[var(--color-saggin-bg)] flex flex-col pb-36 text-[var(--color-saggin-text-primary)] font-sans relative">
@@ -509,7 +509,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* END TRIP CONFIRMATION MODAL */}
       {showEndModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
           <div className="bg-[var(--color-saggin-surface)] w-full max-w-md rounded-2xl p-6 border border-[var(--color-saggin-border)] shadow-2xl animate-in slide-in-from-bottom-6">
             <h2 className="text-2xl font-bold font-space text-[var(--color-saggin-text-primary)] mb-1">
               Concludi Viaggio

@@ -2,11 +2,9 @@
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Truck, Clock, User } from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-import { LogOut } from 'lucide-react'
+import { Truck, Clock, User, LogOut } from 'lucide-react'
 import { signOut } from 'next-auth/react'
+import { cn } from '@/lib/utils'
 
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession()
@@ -17,42 +15,74 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
   const formattedDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1)
 
   return (
-    <div className="min-h-screen bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-primary)] flex flex-col">
-      <header className="bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] p-5 md:p-6  sticky top-0 z-10 flex justify-between items-center">
+    <div className="min-h-screen bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-primary)] flex flex-col font-sans">
+      {/* Mobile Driver Header */}
+      <header className="bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] px-4 py-3.5 sticky top-0 z-30 flex justify-between items-center shadow-xs">
         <div>
-          <div className="text-sm text-[var(--color-saggin-text-secondary)]">{formattedDate}</div>
-          <div className="text-xl font-medium">Ciao, {session?.user?.name || 'Autista'}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">{formattedDate}</div>
+          <div className="text-lg font-bold font-space text-[var(--color-saggin-text-primary)] leading-tight">
+            Ciao, {session?.user?.name?.split(' ')[0] || 'Autista'}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="bg-[var(--color-saggin-surface)] p-1 rounded shrink-0">
-            <img src="/logo.png" alt="Saggin Logo" className="h-6 object-contain" />
+
+        <div className="flex items-center gap-2.5">
+          <div className="bg-white p-1 rounded-lg border border-[var(--color-saggin-border)] shrink-0 shadow-2xs">
+            <img src="/logo.png" alt="Saggin Logo" className="h-6 w-6 object-contain" />
           </div>
           <button 
             onClick={() => signOut({ callbackUrl: '/' })}
-            className="p-2 bg-[var(--color-brand-red)]/10 text-[var(--color-brand-red)] rounded-xl border border-[var(--color-brand-red)]/20 hover:bg-[var(--color-brand-red)] hover:text-white transition-colors"
-            title="Esci"
+            className="p-2 bg-red-50 text-[var(--color-brand-red)] rounded-xl border border-red-200 hover:bg-[var(--color-brand-red)] hover:text-white transition-colors"
+            title="Esci dall'account"
           >
-            <LogOut size={20} />
+            <LogOut size={18} />
           </button>
         </div>
       </header>
       
-      <main className="flex-1 pb-[80px] overflow-y-auto bg-[var(--color-saggin-bg)]">
+      {/* Mobile Content Area */}
+      <main className="flex-1 pb-[85px] overflow-y-auto bg-[var(--color-saggin-bg)]">
         {children}
       </main>
 
-      <nav className="fixed bottom-0 w-full h-[65px] bg-[var(--color-saggin-surface)] border-t border-[var(--color-saggin-border)] flex justify-around items-center shadow-[0_-5px_20px_rgba(0,0,0,0.5)] z-10">
-        <Link href="/my-trips" className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", pathname?.includes('/my-trips') ? "text-[var(--color-brand-red)]" : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-secondary)]")}>
-          <Truck size={24} />
-          <span className="text-xs mt-1 font-medium">Viaggi</span>
+      {/* Mobile Bottom Navigation (Clean White + 1px Top Border) */}
+      <nav className="fixed bottom-0 left-0 right-0 h-[65px] bg-[var(--color-saggin-surface)] border-t border-[var(--color-saggin-border)] flex justify-around items-center z-40 shadow-xs">
+        <Link 
+          href="/my-trips" 
+          className={cn(
+            "flex flex-col items-center justify-center w-full h-full transition-all", 
+            pathname?.includes('/my-trips') 
+              ? "text-[var(--color-brand-red)] font-bold" 
+              : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] font-medium"
+          )}
+        >
+          <Truck size={22} className={pathname?.includes('/my-trips') ? "stroke-[2.5]" : "stroke-[1.75]"} />
+          <span className="text-[11px] mt-1">Viaggi</span>
         </Link>
-        <Link href="/hours" className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", pathname === '/hours' ? "text-[var(--color-brand-red)]" : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-secondary)]")}>
-          <Clock size={24} />
-          <span className="text-xs mt-1 font-medium">Ore</span>
+
+        <Link 
+          href="/hours" 
+          className={cn(
+            "flex flex-col items-center justify-center w-full h-full transition-all", 
+            pathname === '/hours' 
+              ? "text-[var(--color-brand-red)] font-bold" 
+              : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] font-medium"
+          )}
+        >
+          <Clock size={22} className={pathname === '/hours' ? "stroke-[2.5]" : "stroke-[1.75]"} />
+          <span className="text-[11px] mt-1">Ore</span>
         </Link>
-        <Link href="/profile" className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", pathname === '/profile' ? "text-[var(--color-brand-red)]" : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-secondary)]")}>
-          <User size={24} />
-          <span className="text-xs mt-1 font-medium">Profilo</span>
+
+        <Link 
+          href="/profile" 
+          className={cn(
+            "flex flex-col items-center justify-center w-full h-full transition-all", 
+            pathname === '/profile' 
+              ? "text-[var(--color-brand-red)] font-bold" 
+              : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] font-medium"
+          )}
+        >
+          <User size={22} className={pathname === '/profile' ? "stroke-[2.5]" : "stroke-[1.75]"} />
+          <span className="text-[11px] mt-1">Profilo</span>
         </Link>
       </nav>
     </div>

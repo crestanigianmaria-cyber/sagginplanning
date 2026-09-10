@@ -2,16 +2,16 @@
 
 @theme inline {
   --color-brand-red: #E31E24;
-  --color-success: #3FB27F;
-  --color-warning: #F5A623;
+  --color-success: #16A34A;
+  --color-warning: #D97706;
   
-  --color-saggin-bg: #0E0F11;
-  --color-saggin-surface: #17191C;
-  --color-saggin-elevated: #1E2024;
-  --color-saggin-border: #2A2D31;
+  --color-saggin-bg: #F8FAFC;
+  --color-saggin-surface: #FFFFFF;
+  --color-saggin-elevated: #F1F5F9;
+  --color-saggin-border: #CBD5E1;
   
-  --color-saggin-text-primary: #F5F5F4;
-  --color-saggin-text-secondary: #9A9DA3;
+  --color-saggin-text-primary: #0F172A;
+  --color-saggin-text-secondary: #475569;
 
   --font-space: var(--font-space-grotesk);
   --font-inter: var(--font-inter);
@@ -20,7 +20,7 @@
 body {
   background: var(--color-saggin-bg);
   color: var(--color-saggin-text-primary);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
