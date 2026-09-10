@@ -203,11 +203,8 @@ export default function TripForm({
     <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row h-full">
       {/* Form Fields */}
       <div className="flex-1 p-6 overflow-y-auto space-y-8">
-        <div>
-          <h2 className="text-xl font-semibold text-[var(--color-brand-red)] mb-1">
-            {trip ? 'Modifica Viaggio' : 'Nuovo Viaggio'}
-          </h2>
-          <p className="text-sm text-[var(--color-saggin-text-secondary)]">Compila i dettagli per pianificare il viaggio.</p>
+        <div className="pb-2 border-b border-[var(--color-saggin-border)]/50">
+          <p className="text-xs uppercase tracking-wider font-semibold text-[var(--color-saggin-text-secondary)]">Parametri di trasporto e carico</p>
         </div>
 
         {/* Sezione 1: Assegnazione */}
@@ -424,22 +421,66 @@ export default function TripForm({
             </div>
           ) : safetyCheck ? (
             <>
-              {/* Overall Status */}
-              <div className={cn(
-                "p-5 md:p-6 rounded-xl border-2 flex items-center gap-3",
-                safetyCheck.status === 'OK' ? "bg-green-50 border-green-200 text-green-700" :
-                safetyCheck.status === 'WARNING' ? "bg-amber-50 border-amber-200 text-[var(--color-warning)]" :
-                "bg-red-50 border-red-200 text-red-700"
-              )}>
-                {safetyCheck.status === 'OK' ? <ShieldCheck className="h-8 w-8" /> :
-                 safetyCheck.status === 'WARNING' ? <AlertTriangle className="h-8 w-8" /> :
-                 <AlertOctagon className="h-8 w-8" />}
-                <div>
-                  <div className="font-semibold">
-                    {safetyCheck.status === 'OK' ? 'Tutto OK' :
-                     safetyCheck.status === 'WARNING' ? 'Attenzione' : 'Pericolo'}
+              {/* BARRA VISIVA RIEMPIMENTO PORTATA */}
+              {(() => {
+                const selectedVehicle = vehicles?.find((v: any) => v.id === formData.vehicleId);
+                const maxPayload = selectedVehicle?.payloadCapacity || 0;
+                const weight = parseInt(formData.weightKg || '0', 10);
+                const pct = maxPayload > 0 ? Math.round((weight / maxPayload) * 100) : 0;
+                const isOver = maxPayload > 0 && weight > maxPayload;
+                const isWarning = pct > 80 && !isOver;
+
+                return (
+                  <div className="p-4 rounded-xl bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] space-y-3 shadow-sm">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-semibold uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">Portata Mezzo</span>
+                      <span className={cn(
+                        "font-bold font-space text-sm",
+                        isOver ? "text-[var(--color-brand-red)]" :
+                        isWarning ? "text-[var(--color-warning)]" :
+                        "text-[var(--color-success)]"
+                      )}>
+                        {weight.toLocaleString('it-IT')} / {maxPayload.toLocaleString('it-IT')} kg ({pct}%)
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-[var(--color-saggin-bg)] rounded-full h-3 overflow-hidden border border-[var(--color-saggin-border)]">
+                      <div 
+                        className={cn(
+                          "h-full transition-all duration-300 rounded-full",
+                          isOver ? "bg-[var(--color-brand-red)]" :
+                          isWarning ? "bg-[var(--color-warning)]" :
+                          "bg-[var(--color-success)]"
+                        )}
+                        style={{ width: `${Math.min(100, pct)}%` }}
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center text-[10px] text-[var(--color-saggin-text-secondary)] pt-1">
+                      <span>0 kg</span>
+                      <span>80% soglia</span>
+                      <span>Max {maxPayload.toLocaleString('it-IT')} kg</span>
+                    </div>
                   </div>
-                  <div className="text-xs opacity-80">Valutazione basata sui dati correnti</div>
+                );
+              })()}
+
+              {/* Overall Status Dark Theme Badge */}
+              <div className={cn(
+                "p-4 rounded-xl border flex items-center gap-3",
+                safetyCheck.status === 'OK' ? "bg-[var(--color-success)]/10 border-[var(--color-success)]/30 text-[var(--color-success)]" :
+                safetyCheck.status === 'WARNING' ? "bg-[var(--color-warning)]/10 border-[var(--color-warning)]/30 text-[var(--color-warning)]" :
+                "bg-[var(--color-brand-red)]/10 border-[var(--color-brand-red)]/30 text-[var(--color-brand-red)]"
+              )}>
+                {safetyCheck.status === 'OK' ? <ShieldCheck className="h-7 w-7 shrink-0 text-[var(--color-success)]" /> :
+                 safetyCheck.status === 'WARNING' ? <AlertTriangle className="h-7 w-7 shrink-0 text-[var(--color-warning)]" /> :
+                 <AlertOctagon className="h-7 w-7 shrink-0 text-[var(--color-brand-red)]" />}
+                <div>
+                  <div className="font-bold text-sm">
+                    {safetyCheck.status === 'OK' ? 'Carico Idoneo' :
+                     safetyCheck.status === 'WARNING' ? 'Attenzione: Carico Elevato' : 'Carico Non Idoneo (Pericolo)'}
+                  </div>
+                  <div className="text-xs opacity-80">Controllo incrociato peso e sagoma</div>
                 </div>
               </div>
 
@@ -448,18 +489,13 @@ export default function TripForm({
                 <h4 className="text-xs font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider mb-2">Dettaglio Controlli</h4>
                 {safetyCheck.messages.map((msg: any, idx: number) => (
                   <div key={idx} className={cn(
-                    "p-3 rounded-xl border text-sm",
-                    msg.type === 'success' ? "border-green-200 bg-green-50" :
-                    msg.type === 'warning' ? "border-amber-200 bg-amber-50" :
-                    "border-red-200 bg-red-50"
+                    "p-3 rounded-xl border text-xs",
+                    msg.type === 'success' ? "border-[var(--color-success)]/20 bg-[var(--color-success)]/5 text-[var(--color-success)]" :
+                    msg.type === 'warning' ? "border-[var(--color-warning)]/20 bg-[var(--color-warning)]/5 text-[var(--color-warning)]" :
+                    "border-[var(--color-brand-red)]/20 bg-[var(--color-brand-red)]/5 text-[var(--color-brand-red)]"
                   )}>
-                    <div className={cn(
-                      "font-semibold mb-1",
-                      msg.type === 'success' ? "text-green-700" :
-                      msg.type === 'warning' ? "text-[var(--color-warning)]" :
-                      "text-red-700"
-                    )}>{msg.title}</div>
-                    <div className="text-[var(--color-saggin-text-secondary)] text-xs">{msg.detail}</div>
+                    <div className="font-bold mb-0.5">{msg.title}</div>
+                    <div className="text-[var(--color-saggin-text-secondary)]">{msg.detail}</div>
                   </div>
                 ))}
               </div>

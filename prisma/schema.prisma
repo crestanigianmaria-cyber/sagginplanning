@@ -54,6 +54,19 @@ enum AuditAction {
   STATUS_CHANGE
 }
 
+enum ManualHourCategory {
+  CARICO_SCARICO
+  ATTESA
+  MANUTENZIONE
+  ALTRO
+}
+
+enum ManualHourStatus {
+  DA_APPROVARE
+  APPROVATO
+  RIFIUTATO
+}
+
 enum UserType {
   OFFICE
   DRIVER
@@ -165,6 +178,7 @@ model Driver {
   gpsTrackPoints   GpsTrackPoint[]
 
   @@index([defaultVehicleId])
+  manualHours ManualWorkHour[]
 }
 
 model OfficeUser {
@@ -267,4 +281,20 @@ model GpsTrackPoint {
 
   @@index([tripId, timestamp])
   @@index([driverId, timestamp])
+}
+
+model ManualWorkHour {
+  id          String   @id @default(cuid())
+  driverId    String
+  date        DateTime
+  category    ManualHourCategory
+  startTime   String?  // es. "08:00"
+  endTime     String?  // es. "10:30"
+  minutes     Int
+  note        String?
+  status      ManualHourStatus @default(DA_APPROVARE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
 }

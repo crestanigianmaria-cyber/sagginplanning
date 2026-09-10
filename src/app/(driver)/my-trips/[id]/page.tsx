@@ -1,9 +1,13 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Package, AlertTriangle, Truck, Clock, FileText, CheckCircle, Navigation, Phone } from 'lucide-react'
+import { 
+  ArrowLeft, MapPin, Package, AlertTriangle, Truck, Clock, 
+  CheckCircle, Navigation, Phone, Play, Check, ShieldAlert,
+  Calendar, Building2, Hash, FileText
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -15,19 +19,26 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   
+  // Live Timer for IN_CORSO
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0)
+
   // End Trip Modal State
   const [showEndModal, setShowEndModal] = useState(false)
   const [actualCraneHours, setActualCraneHours] = useState('')
   const [driverNotes, setDriverNotes] = useState('')
 
   useEffect(() => {
+    fetchTrip()
+  }, [id])
+
+  const fetchTrip = () => {
     fetch(`/api/trips/${id}`)
       .then(res => res.json())
       .then(data => {
-        if (data.success === false || !data.data) {
-          setTrip(null)
-        } else {
+        if (data.success && data.data) {
           setTrip(data.data)
+        } else {
+          setTrip(null)
         }
         setLoading(false)
       })
@@ -35,23 +46,63 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
         console.error(e)
         setLoading(false)
       })
-  }, [id])
+  }
+
+  // Timer interval when status is IN_CORSO
+  useEffect(() => {
+    if (!trip || trip.status !== 'IN_CORSO' || !trip.actualStartTime) return
+
+    const calculateElapsed = () => {
+      const start = new Date(trip.actualStartTime).getTime()
+      const now = Date.now()
+      setElapsedSeconds(Math.max(0, Math.floor((now - start) / 1000)))
+    }
+
+    calculateElapsed()
+    const timer = setInterval(calculateElapsed, 1000)
+    return () => clearInterval(timer)
+  }, [trip?.status, trip?.actualStartTime])
+
+  const formatTimer = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  const getCoordinates = (): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => resolve({ lat: 45.4642, lng: 9.1900 }),
+          { enableHighAccuracy: true, timeout: 8000 }
+        )
+      } else {
+        resolve({ lat: 45.4642, lng: 9.1900 })
+      }
+    })
+  }
 
   const handleStartTrip = async () => {
     setActionLoading(true)
     try {
-      let lat = 45.4642, lng = 9.1900; 
+      const coords = await getCoordinates()
       
-      await fetch(`/api/trips/${id}/start`, {
+      const res = await fetch(`/api/trips/${id}/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat, lng })
+        body: JSON.stringify(coords)
       })
-      
-      router.refresh()
-      window.location.reload()
+
+      if (res.ok) {
+        fetchTrip()
+      } else {
+        alert("Errore durante l'avvio del viaggio")
+      }
     } catch (e) {
-      alert("Errore durante l'aggiornamento")
+      alert("Errore durante l'avvio del viaggio")
+    } finally {
       setActionLoading(false)
     }
   }
@@ -59,283 +110,468 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
   const handleEndTrip = async () => {
     setActionLoading(true)
     try {
-      let lat = 45.4642, lng = 9.1900; 
+      const coords = await getCoordinates()
       
-      await fetch(`/api/trips/${id}/end`, {
+      const res = await fetch(`/api/trips/${id}/end`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat, lng, actualCraneHours, driverNotes })
+        body: JSON.stringify({ 
+          lat: coords.lat, 
+          lng: coords.lng, 
+          actualCraneHours, 
+          driverNotes 
+        })
       })
-      
-      setShowEndModal(false)
-      router.refresh()
-      window.location.reload()
+
+      if (res.ok) {
+        setShowEndModal(false)
+        fetchTrip()
+      } else {
+        alert("Errore durante il completamento del viaggio")
+      }
     } catch (e) {
-      alert("Errore durante l'aggiornamento")
+      alert("Errore durante il completamento del viaggio")
+    } finally {
       setActionLoading(false)
     }
   }
 
-  if (loading) return (
-    <div className="flex justify-center items-center h-screen bg-[var(--color-saggin-bg)]">
-      <div className="animate-spin h-10 w-10 border-4 border-[var(--color-brand-red)] border-t-transparent rounded-full"></div>
-    </div>
-  )
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-[var(--color-saggin-bg)]">
+        <div className="animate-spin h-10 w-10 border-4 border-[var(--color-brand-red)] border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
 
-  if (!trip) return <div className="p-6 text-[var(--color-saggin-text-primary)] bg-[var(--color-saggin-bg)] min-h-screen">Viaggio non trovato</div>
+  if (!trip) {
+    return (
+      <div className="p-6 text-[var(--color-saggin-text-primary)] bg-[var(--color-saggin-bg)] min-h-screen flex flex-col items-center justify-center">
+        <p className="text-lg font-medium text-[var(--color-saggin-text-secondary)]">Viaggio non trovato</p>
+        <Link href="/my-trips" className="mt-4 px-4 py-2 bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] rounded-xl text-sm">
+          Torna ai viaggi
+        </Link>
+      </div>
+    )
+  }
+
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
+  const lat = trip.latitude || 45.4642
+  const lng = trip.longitude || 9.1900
+  const mapboxStaticUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+e31e24(${lng},${lat})/${lng},${lat},14,0/600x300@2x?access_token=${token}`
 
   return (
-    <div className="min-h-screen bg-[var(--color-saggin-bg)] flex flex-col pb-24 text-[var(--color-saggin-text-primary)] relative">
-      <div className="bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] p-5 md:p-6 sticky top-0 z-10 flex items-center gap-5 md:p-6">
-        <Link href="/my-trips" className="p-2 -ml-2 rounded-full hover:bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-secondary)]">
-          <ArrowLeft size={24} />
-        </Link>
-        <h1 className="text-xl font-medium">Dettaglio Viaggio</h1>
-      </div>
+    <div className="min-h-screen bg-[var(--color-saggin-bg)] flex flex-col pb-36 text-[var(--color-saggin-text-primary)] font-sans relative">
+      
+      {/* HEADER SPECS: orario, stato, nome cliente/destinatario */}
+      <div className="bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] p-4 sticky top-0 z-20 shadow-sm">
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <Link 
+            href="/my-trips" 
+            className="p-2 -ml-1 rounded-lg hover:bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-secondary)] transition-colors"
+          >
+            <ArrowLeft size={22} />
+          </Link>
 
-      <div className="p-5 md:p-6 space-y-4">
-        <div className="bg-[var(--color-saggin-surface)] rounded-xl p-5  border border-[var(--color-saggin-border)]">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <div className="text-sm text-[var(--color-saggin-text-secondary)] mb-1">Orario previsto</div>
-              <div className="text-4xl font-extrabold text-[var(--color-saggin-text-primary)]">{trip.scheduledTime}</div>
-            </div>
-            <div className={cn(
-              "px-3 py-1 rounded-full text-sm font-semibold border",
-              trip.status === 'DA_FARE' ? 'bg-[var(--color-saggin-bg)] border-[var(--color-saggin-border)] text-[var(--color-saggin-text-secondary)]' :
-              trip.status === 'IN_CORSO' ? 'bg-[var(--color-brand-red)]/20 border-[var(--color-brand-red)]/40 text-[var(--color-brand-red)]' :
-              trip.status === 'COMPLETATO' ? 'bg-emerald-900/30 border-emerald-500/30 text-[var(--color-success)]' :
-              'bg-red-900/30 border-red-500/30 text-red-500'
-            )}>
-              {trip?.status?.replace('_', ' ') || 'SCONOSCIUTO'}
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider">
+              Previsto:
+            </span>
+            <span className="text-2xl font-bold font-space text-[var(--color-saggin-text-primary)]">
+              {trip.scheduledTime}
+            </span>
           </div>
 
-          <div className="space-y-6">
-            
-            {/* DESTINAZIONE & MAPS CTA */}
-            <div className="p-5 md:p-6 bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] rounded-xl space-y-4">
-              <div className="flex gap-3">
-                <MapPin className="text-[var(--color-brand-red)] shrink-0 mt-1" size={24} />
-                <div>
-                  <div className="text-sm text-[var(--color-saggin-text-secondary)] font-semibold uppercase tracking-wider mb-1">Destinazione</div>
-                  <div className="text-xl font-semibold leading-tight">{trip.address}</div>
-                </div>
-              </div>
-              
-              {/* Box Tempi e Distanza */}
-              {trip.estimatedDistanceKm && (
-                <div className="flex gap-2 bg-[var(--color-saggin-surface)] p-3 rounded-xl border border-[var(--color-saggin-border)]">
-                  <div className="flex-1 flex flex-col items-center justify-center border-r border-[var(--color-saggin-border)]">
-                    <span className="text-xs text-[var(--color-saggin-text-secondary)] font-medium">Distanza</span>
-                    <span className="text-lg font-semibold text-[var(--color-saggin-text-primary)]">{trip.estimatedDistanceKm} km</span>
-                  </div>
-                  <div className="flex-1 flex flex-col items-center justify-center">
-                    <span className="text-xs text-[var(--color-saggin-text-secondary)] font-medium">Tempo stimato</span>
-                    <span className="text-lg font-semibold text-[var(--color-brand-red)]">{trip.estimatedDurationMins} min</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Tasto Navigatore */}
-              <a 
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(trip.address)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full mt-2 py-4 bg-[var(--color-saggin-bg)]lue-600 hover:bg-[var(--color-saggin-bg)]lue-700 active:bg-[var(--color-saggin-bg)]lue-800 text-[var(--color-saggin-text-primary)] font-semibold rounded-xl flex items-center justify-center gap-3 transition-colors "
-              >
-                <Navigation size={24} /> APRI NAVIGATORE
-              </a>
-            </div>
-
-            {/* REFERENTE & TELEFONO CTA */}
-            {(trip.contactName || trip.contactPhone) && (
-              <div className="p-5 md:p-6 bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] rounded-xl space-y-4">
-                <div>
-                  <div className="text-sm text-[var(--color-saggin-text-secondary)] font-semibold uppercase tracking-wider mb-1">Referente Cantiere</div>
-                  <div className="text-lg font-medium">{trip.contactName || 'Non specificato'}</div>
-                  {trip.contactPhone && <div className="text-[var(--color-saggin-text-secondary)] font-mono text-lg">{trip.contactPhone}</div>}
-                </div>
-
-                {trip.contactPhone && (
-                  <a 
-                    href={`tel:${trip.contactPhone.replace(/\s+/g, '')}`}
-                    className="w-full py-4 bg-[var(--color-success)] hover:bg-[#329267] active:bg-emerald-800 text-white font-semibold rounded-xl flex items-center justify-center gap-3 transition-colors "
-                  >
-                    <Phone size={24} /> CHIAMA ORA
-                  </a>
-                )}
-              </div>
-            )}
-
-            {/* MATERIALE */}
-            <div className="flex gap-5 md:p-6 p-2">
-              <Package className="text-[var(--color-saggin-text-secondary)] shrink-0 mt-1" size={24} />
-              <div>
-                <div className="text-sm text-[var(--color-saggin-text-secondary)] font-semibold uppercase tracking-wider mb-1">Materiale</div>
-                <div className="text-lg font-medium leading-tight">{trip.cargoDescription}</div>
-                {(trip.cargoWeight || trip.cargoLength) && (
-                  <div className="mt-2 text-sm text-[var(--color-saggin-text-secondary)] flex flex-wrap gap-2">
-                    {trip.cargoWeight && <span className="bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] px-2 py-1 rounded font-mono">{trip.cargoWeight} kg</span>}
-                    {trip.cargoLength && <span className="bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] px-2 py-1 rounded font-mono">{trip.cargoLength}x{trip.cargoWidth}x{trip.cargoHeight} m</span>}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* MEZZO */}
-            <div className="flex gap-5 md:p-6 p-2">
-              <Truck className="text-[var(--color-saggin-text-secondary)] shrink-0 mt-1" size={24} />
-              <div>
-                <div className="text-sm text-[var(--color-saggin-text-secondary)] font-semibold uppercase tracking-wider mb-1">Mezzo Assegnato</div>
-                <div className="text-lg font-medium leading-tight">{trip.vehicle?.name}</div>
-              </div>
-            </div>
-
-            {/* GRU */}
-            {trip.needsCrane && (
-              <div className="flex gap-5 md:p-6 p-5 md:p-6 bg-[var(--color-brand-red)]/10 border border-[var(--color-brand-red)]/30 rounded-xl">
-                <AlertTriangle className="text-[var(--color-brand-red)] shrink-0" size={28} />
-                <div>
-                  <div className="text-[var(--color-brand-red)] font-semibold text-lg leading-tight">Uso Gru Richiesto</div>
-                  {trip.craneWorkRadius && (
-                    <div className="text-sm text-[var(--color-brand-red)]/80 mt-1 font-medium">Sbraccio operativo: {trip.craneWorkRadius} metri</div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* NOTE */}
-            {trip.notes && (
-              <div className="mt-2 p-5 md:p-6 bg-[var(--color-saggin-bg)] rounded-xl border border-[var(--color-saggin-border)] relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-zinc-500"></div>
-                <div className="text-xs text-[var(--color-saggin-text-secondary)] font-semibold uppercase tracking-wider mb-2 pl-2">Note ufficio:</div>
-                <div className="text-[var(--color-saggin-text-primary)] pl-2 text-lg italic">{trip.notes}</div>
-              </div>
-            )}
-            
-            {/* RIEPILOGO LAVORO (A FINE LAVORO) */}
-            {trip.status === 'COMPLETATO' && (
-              <div className="mt-6 p-5 bg-[var(--color-saggin-bg)] border border-emerald-900/50 rounded-xl relative overflow-hidden ">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>
-                <div className="flex items-center gap-2 mb-4 pl-2">
-                  <CheckCircle className="text-[var(--color-success)]" size={20} />
-                  <h3 className="font-semibold text-[var(--color-success)] uppercase tracking-wider text-sm">Riepilogo Lavoro</h3>
-                </div>
-                
-                <div className="pl-2 grid grid-cols-2 gap-5 md:p-6 mb-4">
-                  <div>
-                    <div className="text-xs text-[var(--color-saggin-text-secondary)] font-medium">Inizio</div>
-                    <div className="text-[var(--color-saggin-text-primary)] font-semibold">{trip.actualStartTime ? new Date(trip.actualStartTime).toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'}) : '--:--'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-[var(--color-saggin-text-secondary)] font-medium">Fine</div>
-                    <div className="text-[var(--color-saggin-text-primary)] font-semibold">{trip.actualEndTime ? new Date(trip.actualEndTime).toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'}) : '--:--'}</div>
-                  </div>
-                  
-                  {trip.workedMinutes != null && (
-                    <div className="col-span-2 p-3 bg-[var(--color-saggin-surface)] rounded-xl border border-[var(--color-saggin-border)] flex justify-between items-center">
-                      <span className="text-sm text-[var(--color-saggin-text-secondary)] font-medium">Tempo totale lavorato</span>
-                      <span className="text-xl font-bold text-[var(--color-saggin-text-primary)]">
-                        {Math.floor(trip.workedMinutes / 60)}h {trip.workedMinutes % 60}m
-                      </span>
-                    </div>
-                  )}
-                  
-                  {trip.actualCraneHours != null && (
-                    <div className="col-span-2 p-3 bg-[var(--color-saggin-surface)] rounded-xl border border-[var(--color-saggin-border)] flex justify-between items-center">
-                      <span className="text-sm text-[var(--color-saggin-text-secondary)] font-medium">Ore utilizzo Gru</span>
-                      <span className="text-xl font-bold text-[var(--color-brand-red)]">{trip.actualCraneHours}h</span>
-                    </div>
-                  )}
-                </div>
-
-                {trip.driverNotes && (
-                  <div className="pl-2 mt-4 pt-4 border-t border-[var(--color-saggin-border)]">
-                    <div className="text-xs text-[var(--color-saggin-text-secondary)] font-semibold uppercase tracking-wider mb-2">Le tue note / Problemi in cantiere:</div>
-                    <div className="text-emerald-100 text-lg italic bg-emerald-900/10 p-3 rounded-xl border border-emerald-900/30">{trip.driverNotes}</div>
-                  </div>
-                )}
-              </div>
-            )}
+          <div className={cn(
+            "px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border",
+            trip.status === 'DA_FARE' ? 'bg-[var(--color-saggin-bg)] border-[var(--color-saggin-border)] text-[var(--color-saggin-text-secondary)]' :
+            trip.status === 'IN_CORSO' ? 'bg-[var(--color-warning)]/15 border-[var(--color-warning)]/40 text-[var(--color-warning)]' :
+            trip.status === 'COMPLETATO' ? 'bg-[var(--color-success)]/15 border-[var(--color-success)]/40 text-[var(--color-success)]' :
+            'bg-red-900/20 border-red-500/30 text-red-400'
+          )}>
+            <span className={cn(
+              "w-2 h-2 rounded-full",
+              trip.status === 'DA_FARE' ? 'bg-zinc-500' :
+              trip.status === 'IN_CORSO' ? 'bg-[var(--color-warning)] animate-pulse' :
+              trip.status === 'COMPLETATO' ? 'bg-[var(--color-success)]' :
+              'bg-red-500'
+            )} />
+            <span>
+              {trip.status === 'DA_FARE' ? 'Da fare' :
+               trip.status === 'IN_CORSO' ? 'In corso' :
+               trip.status === 'COMPLETATO' ? 'Completato' : 'Annullato'}
+            </span>
           </div>
+        </div>
+
+        {/* Cliente / Destinatario in evidenza nell'header */}
+        <div className="pt-2 border-t border-[var(--color-saggin-border)]/60 flex items-center justify-between">
+          <div className="flex items-center gap-2 truncate">
+            <Building2 size={16} className="text-[var(--color-brand-red)] shrink-0" />
+            <span className="text-base font-semibold text-[var(--color-saggin-text-primary)] truncate">
+              {trip.clientName || trip.contactName || 'Destinazione cantiere'}
+            </span>
+          </div>
+          {trip.clientOrderNumber && (
+            <span className="text-[11px] font-mono bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-secondary)] px-2 py-0.5 rounded border border-[var(--color-saggin-border)] shrink-0 ml-2">
+              #{trip.clientOrderNumber}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* FIXED BOTTOM ACTION BAR */}
-      <div className="fixed bottom-[65px] w-full p-5 md:p-6 bg-[var(--color-saggin-surface)] border-t border-[var(--color-saggin-border)]  z-20">
-        {trip.status === 'DA_FARE' && (
-          <button
-            disabled={actionLoading}
-            onClick={handleStartTrip}
-            className="w-full bg-[var(--color-brand-red)] hover:bg-[#b91c1c] active:scale-[0.98] text-[var(--color-saggin-text-primary)] text-xl font-semibold py-5 rounded-2xl  transition-all flex justify-center items-center gap-3"
-          >
-            {actionLoading ? <div className="animate-spin h-6 w-6 border-4 border-white/30 border-t-white rounded-full" /> : 'INIZIA LAVORO'}
-          </button>
-        )}
-        {trip.status === 'IN_CORSO' && (
-          <button
-            onClick={() => setShowEndModal(true)}
-            className="w-full bg-[var(--color-success)] hover:bg-[#329267] active:scale-[0.98] text-white text-xl font-semibold py-5 rounded-2xl  transition-all flex justify-center items-center gap-3"
-          >
-            TERMINA LAVORO
-          </button>
-        )}
-        {trip.status === 'COMPLETATO' && (
-          <div className="w-full bg-emerald-900/20 text-[var(--color-success)] border border-emerald-900/50 text-xl font-semibold py-4 rounded-2xl text-center flex justify-center items-center gap-2">
-            <CheckCircle size={24} /> VIAGGIO COMPLETATO
+      {/* LIVE TIMER BANNER SE IN CORSO */}
+      {trip.status === 'IN_CORSO' && (
+        <div className="bg-[var(--color-warning)]/10 border-b border-[var(--color-warning)]/30 p-3 px-5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-warning)] animate-ping" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-warning)]">
+              Lavoro attivo da:
+            </span>
+          </div>
+          <div className="text-2xl font-bold font-space text-[var(--color-warning)] tracking-wider">
+            {formatTimer(elapsedSeconds)}
+          </div>
+        </div>
+      )}
+
+      {/* BODY CONTENT */}
+      <div className="p-4 space-y-4">
+        
+        {/* MAPPA MAPBOX & NAVIGATORE */}
+        <div className="bg-[var(--color-saggin-surface)] rounded-2xl border border-[var(--color-saggin-border)] overflow-hidden shadow-sm">
+          {/* Mappa visiva */}
+          <div className="relative h-44 w-full bg-[var(--color-saggin-bg)]">
+            <img 
+              src={mapboxStaticUrl} 
+              alt="Mappa Destinazione" 
+              className="w-full h-full object-cover"
+              onError={(e: any) => {
+                // Se Mapbox static dà errore, fallback su un pattern scuro minimale
+                e.target.style.display = 'none';
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-saggin-surface)] via-transparent to-transparent pointer-events-none" />
+            <div className="absolute top-3 left-3 bg-[var(--color-saggin-surface)]/90 backdrop-blur-md px-2.5 py-1 rounded-lg border border-[var(--color-saggin-border)] text-xs font-medium flex items-center gap-1.5">
+              <MapPin size={14} className="text-[var(--color-brand-red)]" />
+              Destinazione
+            </div>
+          </div>
+
+          <div className="p-4 space-y-3">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-[var(--color-saggin-text-secondary)] mb-1">
+                Indirizzo di Consegna
+              </div>
+              <div className="text-base font-medium text-[var(--color-saggin-text-primary)] leading-snug">
+                {trip.address}
+              </div>
+            </div>
+
+            {/* Bottone Naviga a tutta larghezza */}
+            <a 
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(trip.address)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full py-3.5 bg-[var(--color-brand-red)] hover:bg-[#b91c1c] active:scale-[0.99] text-white font-semibold rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-sm text-sm"
+            >
+              <Navigation size={18} />
+              <span>Avvia Navigatore (Google / Apple Maps)</span>
+            </a>
+          </div>
+        </div>
+
+        {/* DETTAGLI LAVORO (Materiale, Gru evidenziata, Mezzo, Note) */}
+        <div className="bg-[var(--color-saggin-surface)] rounded-2xl p-5 border border-[var(--color-saggin-border)] space-y-4">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">
+            Dettagli Trasporto
+          </h2>
+
+          {/* Materiale / Descrizione */}
+          <div className="flex items-start gap-3">
+            <Package size={20} className="text-[var(--color-saggin-text-secondary)] shrink-0 mt-0.5" />
+            <div>
+              <div className="text-xs text-[var(--color-saggin-text-secondary)] font-medium">Materiale</div>
+              <div className="text-base font-semibold text-[var(--color-saggin-text-primary)]">
+                {trip.cargoDescription}
+              </div>
+              {(trip.cargoWeight || trip.cargoLength) && (
+                <div className="mt-2 flex flex-wrap gap-2 text-xs font-mono">
+                  {trip.cargoWeight && (
+                    <span className="bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] px-2 py-1 rounded text-[var(--color-saggin-text-primary)]">
+                      {trip.cargoWeight} kg
+                    </span>
+                  )}
+                  {trip.cargoLength && (
+                    <span className="bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] px-2 py-1 rounded text-[var(--color-saggin-text-primary)]">
+                      {trip.cargoLength} × {trip.cargoWidth || '-'} × {trip.cargoHeight || '-'} m
+                    </span>
+                  )}
+                  {trip.palletCount && (
+                    <span className="bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] px-2 py-1 rounded text-[var(--color-saggin-text-primary)]">
+                      {trip.palletCount} bancali
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* GRU EVIDENZIATA */}
+          <div className={cn(
+            "p-3.5 rounded-xl border flex items-center justify-between",
+            trip.needsCrane 
+              ? "bg-[var(--color-brand-red)]/10 border-[var(--color-brand-red)]/30 text-[var(--color-brand-red)]"
+              : "bg-[var(--color-saggin-bg)] border-[var(--color-saggin-border)] text-[var(--color-saggin-text-secondary)]"
+          )}>
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle size={20} className={trip.needsCrane ? "text-[var(--color-brand-red)]" : "text-zinc-600"} />
+              <div>
+                <div className="text-sm font-bold">
+                  {trip.needsCrane ? 'Gru Richiesta: SÌ' : 'Gru Richiesta: NO'}
+                </div>
+                {trip.needsCrane && trip.craneWorkRadius && (
+                  <div className="text-xs opacity-90">
+                    Sbraccio operativo: {trip.craneWorkRadius} metri
+                  </div>
+                )}
+              </div>
+            </div>
+            {trip.needsCrane && (
+              <span className="bg-[var(--color-brand-red)] text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                ATTENZIONE
+              </span>
+            )}
+          </div>
+
+          {/* MEZZO ASSEGNATO */}
+          <div className="flex items-center gap-3 pt-2 border-t border-[var(--color-saggin-border)]">
+            <Truck size={20} className="text-[var(--color-saggin-text-secondary)] shrink-0" />
+            <div>
+              <div className="text-xs text-[var(--color-saggin-text-secondary)] font-medium">Mezzo Assegnato</div>
+              <div className="text-sm font-semibold text-[var(--color-saggin-text-primary)]">
+                {trip.vehicle?.name || 'Da definire'} {trip.vehicle?.licensePlate ? `(${trip.vehicle.licensePlate})` : ''}
+              </div>
+            </div>
+          </div>
+
+          {/* NUMERO IMPEGNO */}
+          {trip.clientOrderNumber && (
+            <div className="flex items-center gap-3 pt-2 border-t border-[var(--color-saggin-border)]">
+              <Hash size={20} className="text-[var(--color-saggin-text-secondary)] shrink-0" />
+              <div>
+                <div className="text-xs text-[var(--color-saggin-text-secondary)] font-medium">Numero Impegno Cliente</div>
+                <div className="text-sm font-mono text-[var(--color-saggin-text-primary)]">
+                  {trip.clientOrderNumber}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* NOTE UFFICIO */}
+          {trip.notes && (
+            <div className="pt-2 border-t border-[var(--color-saggin-border)]">
+              <div className="flex items-center gap-1.5 text-xs text-[var(--color-saggin-text-secondary)] font-medium mb-1">
+                <FileText size={14} />
+                Note ufficio:
+              </div>
+              <p className="text-sm italic text-[var(--color-saggin-text-primary)] bg-[var(--color-saggin-bg)] p-3 rounded-lg border border-[var(--color-saggin-border)]">
+                {trip.notes}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* CONTATTO CANTIERE & TELEFONO */}
+        {(trip.contactName || trip.contactPhone) && (
+          <div className="bg-[var(--color-saggin-surface)] rounded-2xl p-5 border border-[var(--color-saggin-border)] space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">
+              Contatto Cantiere
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-base font-semibold text-[var(--color-saggin-text-primary)]">
+                  {trip.contactName || 'Referente cantiere'}
+                </div>
+                {trip.contactPhone && (
+                  <div className="text-sm font-mono text-[var(--color-saggin-text-secondary)] mt-0.5">
+                    {trip.contactPhone}
+                  </div>
+                )}
+              </div>
+
+              {trip.contactPhone && (
+                <a 
+                  href={`tel:${trip.contactPhone.replace(/\s+/g, '')}`}
+                  className="px-4 py-2.5 bg-[var(--color-success)] hover:bg-[#329267] active:scale-95 text-white font-semibold rounded-xl flex items-center gap-2 transition-all shadow-sm text-sm"
+                >
+                  <Phone size={16} />
+                  <span>Chiama</span>
+                </a>
+              )}
+            </div>
           </div>
         )}
+
+        {/* RIEPILOGO A LAVORO COMPLETATO */}
+        {trip.status === 'COMPLETATO' && (
+          <div className="bg-[var(--color-saggin-surface)] rounded-2xl p-5 border border-[var(--color-success)]/30 space-y-4">
+            <div className="flex items-center gap-2 text-[var(--color-success)] font-semibold text-sm">
+              <CheckCircle size={18} />
+              <span>Riepilogo Lavoro Registrato</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="bg-[var(--color-saggin-bg)] p-3 rounded-xl border border-[var(--color-saggin-border)]">
+                <div className="text-xs text-[var(--color-saggin-text-secondary)]">Ora Inizio</div>
+                <div className="text-base font-bold font-space text-[var(--color-saggin-text-primary)]">
+                  {trip.actualStartTime ? new Date(trip.actualStartTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                </div>
+              </div>
+              <div className="bg-[var(--color-saggin-bg)] p-3 rounded-xl border border-[var(--color-saggin-border)]">
+                <div className="text-xs text-[var(--color-saggin-text-secondary)]">Ora Fine</div>
+                <div className="text-base font-bold font-space text-[var(--color-saggin-text-primary)]">
+                  {trip.actualEndTime ? new Date(trip.actualEndTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                </div>
+              </div>
+
+              {trip.workedMinutes != null && (
+                <div className="col-span-2 bg-[var(--color-saggin-bg)] p-3 rounded-xl border border-[var(--color-saggin-border)] flex justify-between items-center">
+                  <span className="text-xs text-[var(--color-saggin-text-secondary)]">Tempo effettivo lavorato</span>
+                  <span className="text-lg font-bold font-space text-[var(--color-success)]">
+                    {Math.floor(trip.workedMinutes / 60)}h {trip.workedMinutes % 60}m
+                  </span>
+                </div>
+              )}
+
+              {trip.actualCraneHours && (
+                <div className="col-span-2 bg-[var(--color-saggin-bg)] p-3 rounded-xl border border-[var(--color-saggin-border)] flex justify-between items-center">
+                  <span className="text-xs text-[var(--color-saggin-text-secondary)]">Ore Gru effettive</span>
+                  <span className="text-lg font-bold font-space text-[var(--color-brand-red)]">
+                    {trip.actualCraneHours}h
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {trip.driverNotes && (
+              <div className="pt-2 border-t border-[var(--color-saggin-border)]">
+                <div className="text-xs text-[var(--color-saggin-text-secondary)] mb-1 font-medium">Note autista:</div>
+                <p className="text-sm italic text-[var(--color-saggin-text-primary)] bg-[var(--color-saggin-bg)] p-3 rounded-lg border border-[var(--color-saggin-border)]">
+                  {trip.driverNotes}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
 
-      {/* END TRIP MODAL */}
+      {/* FIXED BOTTOM ACTION BUTTONS (STICKY) */}
+      <div className="fixed bottom-[65px] left-0 right-0 p-4 bg-[var(--color-saggin-surface)]/95 backdrop-blur-md border-t border-[var(--color-saggin-border)] z-30">
+        <div className="max-w-md mx-auto">
+          {trip.status === 'DA_FARE' && (
+            <button
+              disabled={actionLoading}
+              onClick={handleStartTrip}
+              className="w-full bg-[var(--color-brand-red)] hover:bg-[#b91c1c] active:scale-[0.98] text-white text-lg font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2"
+            >
+              {actionLoading ? (
+                <div className="animate-spin h-6 w-6 border-3 border-white/30 border-t-white rounded-full" />
+              ) : (
+                <>
+                  <Play size={20} className="fill-white" />
+                  <span>INIZIA LAVORO</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {trip.status === 'IN_CORSO' && (
+            <button
+              onClick={() => setShowEndModal(true)}
+              className="w-full bg-[var(--color-success)] hover:bg-[#329267] active:scale-[0.98] text-white text-lg font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2"
+            >
+              <Check size={22} className="stroke-[3]" />
+              <span>TERMINA LAVORO</span>
+            </button>
+          )}
+
+          {trip.status === 'COMPLETATO' && (
+            <div className="w-full bg-[var(--color-success)]/15 text-[var(--color-success)] border border-[var(--color-success)]/30 text-base font-bold py-3.5 rounded-xl text-center flex justify-center items-center gap-2">
+              <CheckCircle size={20} />
+              <span>VIAGGIO COMPLETATO</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* END TRIP CONFIRMATION MODAL */}
       {showEndModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-5 md:p-6 bg-slate-900/40 backdrop-blur-md">
-          <div className="bg-[var(--color-saggin-surface)] w-full max-w-md rounded-[32px] p-8 border border-[var(--color-saggin-border)]  animate-in slide-in-from-bottom-8">
-            <h2 className="text-3xl font-semibold text-[var(--color-saggin-text-primary)] mb-2">Concludi Viaggio</h2>
-            <p className="text-[var(--color-saggin-text-secondary)] mb-8 text-lg">Inserisci i dati conclusivi della consegna.</p>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[var(--color-saggin-surface)] w-full max-w-md rounded-2xl p-6 border border-[var(--color-saggin-border)] shadow-2xl animate-in slide-in-from-bottom-6">
+            <h2 className="text-2xl font-bold font-space text-[var(--color-saggin-text-primary)] mb-1">
+              Concludi Viaggio
+            </h2>
+            <p className="text-sm text-[var(--color-saggin-text-secondary)] mb-6">
+              Registra i dettagli finali del lavoro svolto.
+            </p>
             
             {trip.needsCrane && (
-              <div className="mb-8">
-                <label className="block text-sm font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider mb-3">Ore di utilizzo GRU</label>
+              <div className="mb-5">
+                <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider mb-2">
+                  Ore utilizzo Gru effettive
+                </label>
                 <div className="relative">
-                  <Clock className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-saggin-text-secondary)] h-7 w-7" />
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-saggin-text-secondary)] h-5 w-5" />
                   <input
                     type="number"
                     step="0.5"
                     value={actualCraneHours}
                     onChange={(e) => setActualCraneHours(e.target.value)}
-                    placeholder="Es. 2.5"
-                    className="w-full bg-[var(--color-saggin-bg)] border-2 border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] text-2xl font-semibold rounded-2xl py-5 pl-16 pr-6 focus:ring-4 focus:ring-[#dc2626]/20 focus:border-[var(--color-brand-red)] outline-none transition-all"
+                    placeholder="Es. 2.0"
+                    className="w-full bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] text-lg font-semibold rounded-xl py-3 pl-12 pr-4 focus:border-[var(--color-brand-red)] outline-none"
                   />
                 </div>
               </div>
             )}
             
-            <div className="mb-10">
-              <label className="block text-sm font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider mb-3">Note / Problemi in cantiere</label>
+            <div className="mb-6">
+              <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider mb-2">
+                Note autista / Eventuali problemi
+              </label>
               <textarea
                 value={driverNotes}
                 onChange={(e) => setDriverNotes(e.target.value)}
-                placeholder="Scrivi qui eventuali note..."
-                rows={4}
-                className="w-full bg-[var(--color-saggin-bg)] border-2 border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] text-lg rounded-2xl py-4 px-5 focus:ring-4 focus:ring-[#dc2626]/20 focus:border-[var(--color-brand-red)] outline-none resize-none transition-all"
+                placeholder="Nessun problema, scaricato regolarmente..."
+                rows={3}
+                className="w-full bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] text-sm rounded-xl p-3 focus:border-[var(--color-brand-red)] outline-none resize-none"
               />
             </div>
             
-            <div className="flex gap-5 md:p-6">
+            <div className="flex gap-3">
               <button 
+                type="button"
                 onClick={() => setShowEndModal(false)}
-                className="flex-1 py-5 text-[var(--color-saggin-text-secondary)] font-semibold text-lg bg-[var(--color-saggin-bg)] rounded-2xl hover:bg-gray-200 transition-colors"
+                className="flex-1 py-3 text-sm font-semibold text-[var(--color-saggin-text-secondary)] bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] rounded-xl hover:bg-[var(--color-saggin-elevated)] transition-colors"
               >
-                ANNULLA
+                Annulla
               </button>
               <button 
+                type="button"
                 onClick={handleEndTrip}
                 disabled={actionLoading}
-                className="flex-[2] py-5 text-[var(--color-saggin-text-primary)] font-semibold text-lg text-white bg-[var(--color-success)] rounded-2xl hover:bg-[#329267] transition-colors flex justify-center items-center gap-2 "
+                className="flex-1 py-3 text-sm font-bold text-white bg-[var(--color-success)] hover:bg-[#329267] rounded-xl transition-all flex justify-center items-center gap-2 shadow-sm"
               >
-                {actionLoading ? <div className="animate-spin h-6 w-6 border-4 border-white/30 border-t-white rounded-full" /> : <><CheckCircle size={28} /> CONFERMA</>}
+                {actionLoading ? (
+                  <div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full" />
+                ) : (
+                  <>
+                    <Check size={18} />
+                    <span>Conferma e Salva</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

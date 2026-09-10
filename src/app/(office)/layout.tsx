@@ -11,6 +11,7 @@ import {
   Route,
   Truck,
   Users,
+  Clock,
   Map,
   BarChart3,
   LogOut,
@@ -30,6 +31,7 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
     { name: 'Viaggi', href: '/trips', icon: Route },
     { name: 'Mezzi', href: '/vehicles', icon: Truck },
     { name: 'Autisti', href: '/drivers', icon: Users },
+    { name: 'Ore Lavoro', href: '/office-hours', icon: Clock },
     { name: 'Mappa', href: '#', icon: Map, disabled: true },
     
   ];
