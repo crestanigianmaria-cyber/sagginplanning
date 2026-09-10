@@ -101,7 +101,7 @@ export default function MyTripsPage() {
                 <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
                   <span className="text-sm font-medium text-gray-500">{trip.vehicleName}</span>
                   {trip.needsCrane && (
-                    <span className="bg-[#dc2626] text-gray-900 text-xs font-bold px-2 py-1 rounded-md">GRU</span>
+                    <span className="bg-[#dc2626] text-white text-xs font-bold px-2 py-1 rounded-md">GRU</span>
                   )}
                 </div>
               </div>

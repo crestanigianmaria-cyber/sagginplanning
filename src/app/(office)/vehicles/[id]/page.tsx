@@ -61,7 +61,7 @@ export default async function VehicleDetailPage({ params }: any) {
               <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
                 <div>
                   <dt className="text-sm text-gray-500">Tipologia</dt>
-                  <dd className="mt-1 font-semibold text-zinc-200">{typeLabel[vehicle.type] || vehicle.type}</dd>
+                  <dd className="mt-1 font-semibold text-gray-900">{typeLabel[vehicle.type] || vehicle.type}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">Portata Utile</dt>
@@ -69,12 +69,12 @@ export default async function VehicleDetailPage({ params }: any) {
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">Tara</dt>
-                  <dd className="mt-1 font-semibold text-zinc-200">{vehicle.tare.toLocaleString()} kg</dd>
+                  <dd className="mt-1 font-semibold text-gray-900">{vehicle.tare.toLocaleString()} kg</dd>
                 </div>
                 {vehicle.towableLoad && (
                   <div>
                     <dt className="text-sm text-gray-500">Portata Trainabile</dt>
-                    <dd className="mt-1 font-semibold text-zinc-200">{vehicle.towableLoad.toLocaleString()} kg</dd>
+                    <dd className="mt-1 font-semibold text-gray-900">{vehicle.towableLoad.toLocaleString()} kg</dd>
                   </div>
                 )}
               </dl>
@@ -109,10 +109,10 @@ export default async function VehicleDetailPage({ params }: any) {
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                {vehicle.maxTransportableLength && <div className="flex justify-between"><span className="text-gray-500">Max lun. trasportabile</span><span className="font-medium text-zinc-200">{vehicle.maxTransportableLength}m</span></div>}
-                {vehicle.maxTransportableHeight && <div className="flex justify-between"><span className="text-gray-500">Max alt. trasportabile</span><span className="font-medium text-zinc-200">{vehicle.maxTransportableHeight}m</span></div>}
-                {vehicle.maxRearOverhang && <div className="flex justify-between"><span className="text-gray-500">Max sporgenza post.</span><span className="font-medium text-zinc-200">{vehicle.maxRearOverhang}m</span></div>}
-                {vehicle.maxExternalWidth && <div className="flex justify-between"><span className="text-gray-500">Larghezza esterna</span><span className="font-medium text-zinc-200">{vehicle.maxExternalWidth}m</span></div>}
+                {vehicle.maxTransportableLength && <div className="flex justify-between"><span className="text-gray-500">Max lun. trasportabile</span><span className="font-medium text-gray-900">{vehicle.maxTransportableLength}m</span></div>}
+                {vehicle.maxTransportableHeight && <div className="flex justify-between"><span className="text-gray-500">Max alt. trasportabile</span><span className="font-medium text-gray-900">{vehicle.maxTransportableHeight}m</span></div>}
+                {vehicle.maxRearOverhang && <div className="flex justify-between"><span className="text-gray-500">Max sporgenza post.</span><span className="font-medium text-gray-900">{vehicle.maxRearOverhang}m</span></div>}
+                {vehicle.maxExternalWidth && <div className="flex justify-between"><span className="text-gray-500">Larghezza esterna</span><span className="font-medium text-gray-900">{vehicle.maxExternalWidth}m</span></div>}
               </div>
               {vehicle.notes && (
                 <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-500 italic">
@@ -178,7 +178,7 @@ export default async function VehicleDetailPage({ params }: any) {
           ) : (
             <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-8 text-center">
               <Anchor className="h-10 w-10 text-zinc-700 mx-auto mb-3" />
-              <p className="font-medium text-zinc-600">Nessuna gru installata</p>
+              <p className="font-medium text-gray-500">Nessuna gru installata</p>
             </div>
           )}
 
@@ -192,7 +192,7 @@ export default async function VehicleDetailPage({ params }: any) {
                 {vehicle.configurations.map(c => (
                   <div key={c.id} className="p-4">
                     <div className="flex justify-between items-start mb-1">
-                      <span className="font-bold text-zinc-200">{c.name}</span>
+                      <span className="font-bold text-gray-900">{c.name}</span>
                       {c.isDefault && <span className="text-[10px] bg-[#dc2626]/20 text-[#dc2626] px-2 py-0.5 rounded font-bold">DEFAULT</span>}
                     </div>
                     <div className="text-xs text-gray-500">Portata: {c.payloadCapacity.toLocaleString()} kg · Tara: {c.tare.toLocaleString()} kg</div>

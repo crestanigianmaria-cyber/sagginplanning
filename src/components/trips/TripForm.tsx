@@ -102,11 +102,21 @@ export default function TripForm({
       } else {
         const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(query)}&access_token=${token}&country=it&limit=5&types=address,poi,place`);
         const data = await res.json();
-        if (data.features) {
+        if (res.ok && data.features) {
           setSuggestions(data.features.map((f: any) => ({
-            display_name: f.properties.full_address || f.properties.name || f.properties.place_formatted,
+            display_name: f.properties.full_address || f.properties.name || f.properties.place_formatted || 'Indirizzo sconosciuto',
             lat: f.geometry.coordinates[1],
             lon: f.geometry.coordinates[0]
+          })));
+        } else {
+          // Fallback a Nominatim se Mapbox fallisce (es. token non valido)
+          console.warn('Mapbox ha restituito un errore, uso Nominatim come fallback');
+          const fbRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=it&limit=5`);
+          const fbData = await fbRes.json();
+          setSuggestions(fbData.map((d: any) => ({
+            display_name: d.display_name,
+            lat: parseFloat(d.lat),
+            lon: parseFloat(d.lon)
           })));
         }
       }
@@ -342,7 +352,7 @@ export default function TripForm({
                       <li 
                         key={i} 
                         onClick={() => selectAddress(s)}
-                        className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm text-zinc-200 border-b border-gray-200 last:border-0 transition-colors"
+                        className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm text-gray-900 border-b border-gray-200 last:border-0 transition-colors"
                       >
                         {s.display_name}
                       </li>
@@ -464,8 +474,8 @@ export default function TripForm({
             className={cn(
               "w-full py-3 px-4 rounded-xl font-bold flex justify-center items-center gap-2 transition-colors shadow-sm",
               safetyCheck?.status === 'DANGER' 
-                ? "bg-red-600 hover:bg-red-700 text-gray-900" 
-                : "bg-[#dc2626] hover:bg-[#b91c1c] text-gray-900"
+                ? "bg-red-600 hover:bg-red-700 text-white" 
+                : "bg-[#dc2626] hover:bg-[#b91c1c] text-white"
             )}
           >
             <Save className="h-5 w-5" />

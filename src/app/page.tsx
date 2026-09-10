@@ -54,7 +54,7 @@ export default function LandingPage() {
         
       </div>
       
-      <div className="absolute bottom-6 text-zinc-600 text-xs font-medium">
+      <div className="absolute bottom-6 text-gray-500 text-xs font-medium">
         Saggin Planning System v2.0
       </div>
     </div>

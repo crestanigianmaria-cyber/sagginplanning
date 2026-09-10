@@ -79,7 +79,7 @@ export default function TripsClient({ initialTrips, drivers, vehicles }: any) {
             <input 
               type="text" 
               placeholder="Cerca viaggio..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#dc2626]/20 focus:border-[#dc2626]"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#dc2626]/20 focus:border-[#dc2626]"
             />
           </div>
           <button className="p-2 text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100">
@@ -87,7 +87,7 @@ export default function TripsClient({ initialTrips, drivers, vehicles }: any) {
           </button>
           <button 
             onClick={handleCreateNew}
-            className="flex items-center gap-2 px-4 py-2 bg-[#dc2626] text-gray-900 text-sm font-medium rounded-lg hover:bg-[#b91c1c] transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-[#dc2626] text-white text-sm font-medium rounded-lg hover:bg-[#b91c1c] transition-colors shadow-sm"
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Nuovo Viaggio</span>
@@ -122,7 +122,7 @@ export default function TripsClient({ initialTrips, drivers, vehicles }: any) {
                 <div className="text-sm font-medium text-gray-900 mb-1">{trip.address}</div>
                 <div className="text-xs text-gray-500">{trip.driver?.name}</div>
                 {trip.auditLogs?.find((l: any) => l.action === 'CREATE')?.officeUser?.name && (
-                  <div className="text-[10px] text-zinc-600 mt-2 border-t border-gray-200 pt-1">
+                  <div className="text-[10px] text-gray-500 mt-2 border-t border-gray-200 pt-1">
                     Creato da: <span className="font-medium text-gray-500">{trip.auditLogs.find((l: any) => l.action === 'CREATE').officeUser.name}</span>
                   </div>
                 )}
@@ -151,7 +151,7 @@ export default function TripsClient({ initialTrips, drivers, vehicles }: any) {
               </p>
               <button 
                 onClick={handleCreateNew}
-                className="mt-6 px-6 py-2 bg-[#dc2626] text-gray-900 text-sm font-medium rounded-lg hover:bg-[#b91c1c] transition-colors"
+                className="mt-6 px-6 py-2 bg-[#dc2626] text-white text-sm font-medium rounded-lg hover:bg-[#b91c1c] transition-colors"
               >
                 Crea Nuovo Viaggio
               </button>

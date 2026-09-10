@@ -27,10 +27,10 @@ export default async function VehiclesPage() {
             <input 
               type="text" 
               placeholder="Cerca per targa o nome..." 
-              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-zinc-200 placeholder:text-zinc-600 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#dc2626]/50 focus:border-[#dc2626]/50 transition-all"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#dc2626]/50 focus:border-[#dc2626]/50 transition-all"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#dc2626] text-gray-900 text-sm font-medium rounded-lg hover:bg-[#b91c1c] transition-all shadow-[0_0_15px_rgba(220,38,38,0.3)] hover:shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#dc2626] text-white text-sm font-medium rounded-lg hover:bg-[#b91c1c] transition-all shadow-[0_0_15px_rgba(220,38,38,0.3)] hover:shadow-[0_0_20px_rgba(220,38,38,0.5)]">
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Nuovo Mezzo</span>
           </button>
@@ -62,15 +62,15 @@ export default async function VehiclesPage() {
               <div className="space-y-3 mb-6 relative">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Tipologia</span>
-                  <span className="font-medium text-zinc-200">{v.type.replace(/_/g, ' ')}</span>
+                  <span className="font-medium text-gray-900">{v.type.replace(/_/g, ' ')}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Portata Utile</span>
-                  <span className="font-medium text-zinc-200">{v.payloadCapacity.toLocaleString()} kg</span>
+                  <span className="font-medium text-gray-900">{v.payloadCapacity.toLocaleString()} kg</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Tara</span>
-                  <span className="font-medium text-zinc-200">{v.tare.toLocaleString()} kg</span>
+                  <span className="font-medium text-gray-900">{v.tare.toLocaleString()} kg</span>
                 </div>
               </div>
 
@@ -81,7 +81,7 @@ export default async function VehiclesPage() {
                     Gru: {v.craneModel || 'Sì'}
                   </div>
                 ) : (
-                  <div className="text-sm text-zinc-600 bg-white/50 px-2 py-1 rounded-md border border-gray-200/50">Nessuna gru</div>
+                  <div className="text-sm text-gray-500 bg-white/50 px-2 py-1 rounded-md border border-gray-200/50">Nessuna gru</div>
                 )}
                 
                 <span className="text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors flex items-center gap-1">

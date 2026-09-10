@@ -94,7 +94,7 @@ export default function PinLoginPage() {
               onClick={() => setSelectedDriver(d)}
               className="w-full bg-white/10 hover:bg-white/20 p-6 rounded-2xl flex items-center gap-6 active:scale-95 transition-transform"
             >
-              <div className="w-16 h-16 rounded-full bg-[#dc2626] text-gray-900 text-2xl font-bold flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-[#dc2626] text-white text-2xl font-bold flex items-center justify-center">
                 {d.initials || d.name.substring(0, 2).toUpperCase()}
               </div>
               <span className="text-2xl font-medium">{d.name}</span>
@@ -118,7 +118,7 @@ export default function PinLoginPage() {
       </button>
 
       <div className="mb-12 flex flex-col items-center">
-        <div className="w-20 h-20 rounded-full bg-[#dc2626] text-gray-900 text-3xl font-bold flex items-center justify-center mb-6 shadow-lg">
+        <div className="w-20 h-20 rounded-full bg-[#dc2626] text-white text-3xl font-bold flex items-center justify-center mb-6 shadow-lg">
           {selectedDriver.initials || selectedDriver.name.substring(0, 2).toUpperCase()}
         </div>
         <h2 className="text-3xl font-medium">Ciao, {selectedDriver.name}</h2>

@@ -160,7 +160,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                 {trip.contactPhone && (
                   <a 
                     href={`tel:${trip.contactPhone.replace(/\s+/g, '')}`}
-                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-gray-900 font-bold rounded-xl flex items-center justify-center gap-3 transition-colors shadow-lg"
+                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-colors shadow-lg"
                   >
                     <Phone size={24} /> CHIAMA ORA
                   </a>
@@ -210,7 +210,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
               <div className="mt-2 p-4 bg-gray-100 rounded-xl border border-gray-300 relative overflow-hidden">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-zinc-500"></div>
                 <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 pl-2">Note ufficio:</div>
-                <div className="text-zinc-200 pl-2 text-lg italic">{trip.notes}</div>
+                <div className="text-gray-900 pl-2 text-lg italic">{trip.notes}</div>
               </div>
             )}
             
@@ -276,7 +276,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
         {trip.status === 'IN_CORSO' && (
           <button
             onClick={() => setShowEndModal(true)}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-gray-900 text-xl font-bold py-5 rounded-2xl shadow-[0_0_20px_rgba(5,150,105,0.3)] transition-all flex justify-center items-center gap-3"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xl font-bold py-5 rounded-2xl shadow-[0_0_20px_rgba(5,150,105,0.3)] transition-all flex justify-center items-center gap-3"
           >
             TERMINA LAVORO
           </button>
@@ -333,7 +333,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
               <button 
                 onClick={handleEndTrip}
                 disabled={actionLoading}
-                className="flex-[2] py-5 text-gray-900 font-bold text-lg bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(5,150,105,0.3)]"
+                className="flex-[2] py-5 text-gray-900 font-bold text-lg text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(5,150,105,0.3)]"
               >
                 {actionLoading ? <div className="animate-spin h-6 w-6 border-4 border-white/30 border-t-white rounded-full" /> : <><CheckCircle size={28} /> CONFERMA</>}
               </button>

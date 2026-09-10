@@ -176,7 +176,7 @@ export default function PlanningClient({ initialDrivers, initialTrips, initialVe
             className={cn(
               "px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all shadow-sm border",
               selectedDay === day.id
-                ? "bg-[#dc2626] text-gray-900 border-[#dc2626] shadow-[0_0_15px_rgba(220,38,38,0.3)]"
+                ? "bg-[#dc2626] text-white border-[#dc2626] shadow-[0_0_15px_rgba(220,38,38,0.3)]"
                 : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-100"
             )}
           >

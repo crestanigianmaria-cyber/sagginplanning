@@ -68,7 +68,7 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
               return (
                 <li key={item.name}>
                   {item.disabled ? (
-                    <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-zinc-600 cursor-not-allowed">
+                    <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 cursor-not-allowed">
                       <item.icon className="h-5 w-5 mr-3 shrink-0" />
                       {item.name}
                       <span className="ml-auto text-[10px] uppercase tracking-wider bg-gray-100/50 text-gray-500 px-2 py-1 rounded-md">
@@ -112,7 +112,7 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
               <p className="text-xs text-gray-500">Portale Ufficio</p>
             </div>
           </div>
-          <button onClick={() => signOut({ callbackUrl: "/" })} className="flex items-center justify-center w-full px-4 py-2.5 mt-2 text-sm font-bold bg-[#dc2626]/10 text-[#dc2626] border border-[#dc2626]/20 rounded-xl hover:bg-[#dc2626] hover:text-gray-900 transition-all shadow-sm">
+          <button onClick={() => signOut({ callbackUrl: "/" })} className="flex items-center justify-center w-full px-4 py-2.5 mt-2 text-sm font-bold bg-[#dc2626]/10 text-[#dc2626] border border-[#dc2626]/20 rounded-xl hover:bg-[#dc2626] hover:text-white transition-all shadow-sm">
             <LogOut className="h-4 w-4 mr-3" />
             Esci
           </button>
@@ -141,7 +141,7 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto h-full text-zinc-200">
+          <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto h-full text-gray-900">
             {children}
           </div>
         </main>

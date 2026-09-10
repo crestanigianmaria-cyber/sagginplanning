@@ -29,7 +29,7 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
           </div>
           <button 
             onClick={() => signOut({ callbackUrl: '/' })}
-            className="p-2 bg-[#dc2626]/10 text-[#dc2626] rounded-lg border border-[#dc2626]/20 hover:bg-[#dc2626] hover:text-gray-900 transition-colors"
+            className="p-2 bg-[#dc2626]/10 text-[#dc2626] rounded-lg border border-[#dc2626]/20 hover:bg-[#dc2626] hover:text-white transition-colors"
             title="Esci"
           >
             <LogOut size={20} />

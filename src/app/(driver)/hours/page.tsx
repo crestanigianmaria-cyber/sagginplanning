@@ -68,7 +68,7 @@ export default function HoursPage() {
         </div>
         <h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider mb-3">Viaggi completati oggi:</h3>
         {todayTrips.length === 0 ? (
-          <p className="text-zinc-600 text-sm">Nessun viaggio completato oggi</p>
+          <p className="text-gray-500 text-sm">Nessun viaggio completato oggi</p>
         ) : (
           <div className="space-y-2">
             {todayTrips.map((t: any) => (
