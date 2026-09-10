@@ -174,10 +174,10 @@ export default function TripForm({
     
     // Map formData to Prisma Trip model
     const payload = {
-      driverId: formData.driverId,
+      driverId: formData.driverId || null,
       date: new Date(formData.date).toISOString(),
       scheduledTime: formData.time,
-      vehicleId: formData.vehicleId,
+      vehicleId: formData.vehicleId || null,
       trailerId: formData.trailerId || null,
       cargoDescription: formData.cargoDesc,
       cargoWeight: formData.weightKg ? parseInt(formData.weightKg) : null,
@@ -218,9 +218,9 @@ export default function TripForm({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:p-6">
             <div>
-              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Autista *</label>
-              <select name="driverId" value={formData.driverId} onChange={handleChange} required className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">
-  <option value="">Seleziona...</option>
+              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Autista (Opzionale)</label>
+              <select name="driverId" value={formData.driverId} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">
+  <option value="">Da Assegnare</option>
   {drivers?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
 </select>
             </div>
@@ -244,8 +244,8 @@ export default function TripForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:p-6">
             <div>
               <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Veicolo Trattore *</label>
-              <select name="vehicleId" value={formData.vehicleId} onChange={handleChange} required className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">
-  <option value="">Seleziona...</option>
+              <select name="vehicleId" value={formData.vehicleId} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">
+  <option value="">Da Assegnare</option>
   {vehicles?.filter((v:any) => v.type !== 'RIMORCHIO').map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
 </select>
             </div>
