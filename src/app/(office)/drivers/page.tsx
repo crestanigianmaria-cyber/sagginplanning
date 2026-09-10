@@ -64,7 +64,7 @@ export default async function DriversPage() {
               </div>
             </div>
 
-            <div className="bg-[#0c0c0e] border-t border-slate-200 p-5 md:p-6 flex gap-3">
+            <div className="bg-slate-50 border-t border-slate-200 p-5 md:p-6 flex gap-3">
               <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 hover:border-zinc-600 rounded-xl text-sm font-medium text-slate-700 hover:text-slate-900 transition-all ">
                 <Edit className="h-4 w-4" />
                 Modifica
