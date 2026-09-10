@@ -1,4 +1,5 @@
 'use client';
+import { useSession } from 'next-auth/react';
 
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, AlertTriangle, AlertOctagon, Save, X, Truck, Package, MapPin, User, FileText, Anchor } from 'lucide-react';
@@ -13,7 +14,22 @@ export default function TripForm({
   defaultDriverId,
   defaultDate
 }: any) {
+  const { data: session } = useSession();
+  const [officeUsers, setOfficeUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/office-users')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && Array.isArray(d.data)) {
+          setOfficeUsers(d.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const [formData, setFormData] = useState({
+    createdById: trip?.createdById || (session?.user as any)?.id || '',
     driverId: trip?.driverId || defaultDriverId || '',
     date: trip?.date ? trip.date.split('T')[0] : (defaultDate || ''),
     time: trip?.scheduledTime || '',
@@ -174,6 +190,7 @@ export default function TripForm({
     
     // Map formData to Prisma Trip model
     const payload = {
+      createdById: formData.createdById || undefined,
       driverId: formData.driverId || null,
       date: new Date(formData.date).toISOString(),
       scheduledTime: formData.time,
@@ -213,7 +230,21 @@ export default function TripForm({
             <User className="h-5 w-5" />
             <h3 className="font-semibold">Assegnazione</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Creato / Registrato da</label>
+              <select 
+                name="createdById" 
+                value={formData.createdById} 
+                onChange={handleChange} 
+                className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 border outline-none"
+              >
+                <option value="">Seleziona chi crea...</option>
+                {officeUsers.map((u: any) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Autista (Opzionale)</label>
               <select name="driverId" value={formData.driverId} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">

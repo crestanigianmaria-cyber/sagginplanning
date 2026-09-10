@@ -2,33 +2,45 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { MapPin, Calendar, CheckCircle2, Clock, Play, AlertTriangle, ArrowRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { 
+  MapPin, Calendar, CheckCircle2, Clock, Play, AlertTriangle, 
+  ArrowRight, User, Sparkles, Filter 
+} from 'lucide-react'
+import { cn, getDriverAvatar } from '@/lib/utils'
 
 type Trip = {
   id: string
+  date: string
   status: 'DA_FARE' | 'IN_CORSO' | 'COMPLETATO' | 'ANNULLATO'
   scheduledTime: string
   cargoDescription: string
   address: string
   vehicleName?: string
+  vehicle?: { name: string }
   needsCrane: boolean
   clientName?: string
   contactName?: string
+  createdByName?: string
 }
 
 export default function MyTripsPage() {
   const { data: session } = useSession()
-  const [trips, setTrips] = useState<Trip[]>([])
+  const [allTrips, setAllTrips] = useState<Trip[]>([])
+  const [filterMode, setFilterMode] = useState<'all' | 'today'>('all')
   const [loading, setLoading] = useState(true)
 
+  const driverId = (session?.user as any)?.id
+  const driverName = session?.user?.name || 'Autista'
+  const driverAvatar = getDriverAvatar(driverName, (session?.user as any)?.profilePicture)
+
   useEffect(() => {
-    if (session?.user) {
-      const today = new Date().toISOString().split('T')[0];
-      fetch(`/api/trips?date=${today}&driverId=${(session.user as any).id || ''}`)
+    if (driverId) {
+      // Carichiamo TUTTI i viaggi assegnati a questo autista (senza restrizione rigida a un solo giorno UTC)
+      fetch(`/api/trips?driverId=${driverId}`)
         .then(res => res.json())
         .then(data => {
-          setTrips(data.success && Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []))
+          const list = data.success && Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : [])
+          setAllTrips(list)
           setLoading(false)
         })
         .catch(e => {
@@ -36,7 +48,7 @@ export default function MyTripsPage() {
           setLoading(false)
         })
     }
-  }, [session])
+  }, [driverId])
 
   if (loading) {
     return (
@@ -46,42 +58,123 @@ export default function MyTripsPage() {
     )
   }
 
-  const completed = trips.filter(t => t.status === 'COMPLETATO').length
-  const total = trips.length
+  // Filtraggio dinamico
+  const todayStr = new Date().toISOString().split('T')[0]
+  
+  const displayedTrips = allTrips.filter(t => {
+    if (filterMode === 'today') {
+      return t.date?.startsWith(todayStr)
+    }
+    // Per 'all', mostriamo prima tutti i viaggi DA_FARE o IN_CORSO (anche se di ieri o domani) + quelli completati oggi
+    return t.status !== 'ANNULLATO'
+  }).sort((a, b) => {
+    // Ordina per data e orario
+    const dateComp = (a.date || '').localeCompare(b.date || '')
+    if (dateComp !== 0) return dateComp
+    return (a.scheduledTime || '').localeCompare(b.scheduledTime || '')
+  })
+
+  const completedCount = allTrips.filter(t => t.status === 'COMPLETATO').length
+  const pendingCount = allTrips.filter(t => t.status === 'DA_FARE' || t.status === 'IN_CORSO').length
 
   return (
     <div className="p-4 space-y-4 font-sans max-w-lg mx-auto">
-      {/* HEADER COUNTER */}
-      <div className="bg-[var(--color-saggin-surface)] rounded-2xl p-4 flex justify-between items-center border border-[var(--color-saggin-border)] shadow-xs">
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">Programma Consegne</span>
-          <div className="font-bold text-[var(--color-saggin-text-primary)] text-lg font-space">
-            {total === 0 ? 'Nessun viaggio oggi' : `${total} ${total === 1 ? 'viaggio' : 'viaggi'} per oggi`}
+      
+      {/* SCHEDA IDENTITÀ AUTISTA CON FOTO PROFILO */}
+      <div className="bg-[var(--color-saggin-surface)] rounded-2xl p-4 border border-[var(--color-saggin-border)] shadow-xs flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link href="/profile" className="shrink-0 relative" title="Visualizza il tuo profilo">
+            {driverAvatar ? (
+              <img 
+                src={driverAvatar} 
+                alt={driverName} 
+                className="w-12 h-12 rounded-full object-cover border-2 border-[var(--color-brand-red)] shadow-2xs"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] flex items-center justify-center font-bold text-base text-[var(--color-saggin-text-primary)]">
+                {driverName.charAt(0)}
+              </div>
+            )}
+            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[var(--color-success)] border-2 border-white" />
+          </Link>
+
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">
+              Autista Connesso
+            </div>
+            <div className="text-base font-bold font-space text-[var(--color-saggin-text-primary)]">
+              {driverName}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="bg-red-50 text-[var(--color-brand-red)] px-3 py-1.5 rounded-xl font-bold font-space text-sm border border-red-200 shadow-2xs">
-            {completed} / {total} fatti
+        <div className="flex flex-col items-end">
+          <span className="bg-red-50 text-[var(--color-brand-red)] px-2.5 py-1 rounded-xl font-bold font-space text-xs border border-red-200">
+            {pendingCount} {pendingCount === 1 ? 'da fare' : 'da fare'}
+          </span>
+          <span className="text-[10px] text-[var(--color-saggin-text-secondary)] mt-1 font-medium">
+            {completedCount} completati
           </span>
         </div>
       </div>
 
-      {trips.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-[var(--color-saggin-text-secondary)] space-y-4 bg-[var(--color-saggin-surface)] rounded-2xl border border-[var(--color-saggin-border)] p-6 text-center">
+      {/* TABS FILTRO: TUTTI I VIAGGI VS SOLO OGGI */}
+      <div className="flex rounded-xl bg-[var(--color-saggin-elevated)] p-1 border border-[var(--color-saggin-border)]">
+        <button
+          onClick={() => setFilterMode('all')}
+          className={cn(
+            "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
+            filterMode === 'all' 
+              ? "bg-white text-[var(--color-saggin-text-primary)] shadow-xs border border-slate-200" 
+              : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)]"
+          )}
+        >
+          <span>Tutti in Programma</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 font-mono">
+            {allTrips.filter(t => t.status !== 'ANNULLATO').length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setFilterMode('today')}
+          className={cn(
+            "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
+            filterMode === 'today' 
+              ? "bg-white text-[var(--color-saggin-text-primary)] shadow-xs border border-slate-200" 
+              : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)]"
+          )}
+        >
+          <span>Solo di Oggi</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 font-mono">
+            {allTrips.filter(t => t.date?.startsWith(todayStr)).length}
+          </span>
+        </button>
+      </div>
+
+      {/* LISTA VIAGGI */}
+      {displayedTrips.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-[var(--color-saggin-text-secondary)] space-y-4 bg-[var(--color-saggin-surface)] rounded-2xl border border-[var(--color-saggin-border)] p-6 text-center shadow-xs">
           <div className="w-14 h-14 rounded-full bg-[var(--color-saggin-elevated)] flex items-center justify-center text-slate-400">
             <Calendar size={28} />
           </div>
           <div>
-            <h3 className="text-base font-bold text-[var(--color-saggin-text-primary)]">Nessun viaggio programmato</h3>
-            <p className="text-xs text-[var(--color-saggin-text-secondary)] mt-1">Non ci sono consegne assegnate per la giornata odierna.</p>
+            <h3 className="text-base font-bold text-[var(--color-saggin-text-primary)]">
+              {filterMode === 'today' ? 'Nessun viaggio oggi' : 'Nessun viaggio assegnato'}
+            </h3>
+            <p className="text-xs text-[var(--color-saggin-text-secondary)] mt-1 max-w-xs">
+              {filterMode === 'today' 
+                ? 'Prova a cliccare su "Tutti in Programma" per verificare le consegne previste per altri giorni.'
+                : 'Quando l\'ufficio pianifica una consegna per te, comparirà immediatamente in questo elenco.'}
+            </p>
           </div>
         </div>
       ) : (
         <div className="space-y-3">
-          {trips.map(trip => {
+          {displayedTrips.map(trip => {
             const isCompleted = trip.status === 'COMPLETATO'
             const isInProgress = trip.status === 'IN_CORSO'
+            const tripDate = trip.date ? new Date(trip.date) : null
+            const isToday = tripDate ? tripDate.toISOString().split('T')[0] === todayStr : false
 
             return (
               <Link key={trip.id} href={`/my-trips/${trip.id}`} className="block group">
@@ -99,13 +192,20 @@ export default function MyTripsPage() {
                     "bg-slate-400"
                   )} />
 
-                  {/* Top Bar: Orario e Badge Stato */}
+                  {/* Top Bar: Data/Orario e Badge Stato */}
                   <div className="flex justify-between items-center pl-2 mb-2">
                     <div className="flex items-center gap-2">
                       <Clock size={16} className="text-[var(--color-brand-red)]" />
                       <span className="text-2xl font-bold font-space text-[var(--color-saggin-text-primary)] tracking-tight">
                         {trip.scheduledTime}
                       </span>
+                      
+                      {/* Date Pill se diverso da oggi */}
+                      {!isToday && tripDate && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)]">
+                          {tripDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
+                        </span>
+                      )}
                     </div>
 
                     <div className={cn(
@@ -142,20 +242,32 @@ export default function MyTripsPage() {
                     </div>
                   </div>
                   
-                  {/* Bottom details: Mezzo e Gru */}
-                  <div className="flex justify-between items-center pl-2 pt-2.5 border-t border-[var(--color-saggin-border)]/80 text-xs">
-                    <div className="font-semibold text-[var(--color-saggin-text-secondary)] truncate mr-2">
-                      {trip.vehicleName || 'Mezzo da assegnare'}
+                  {/* Bottom details: Mezzo, Gru e CHI HA CREATO IL VIAGGIO */}
+                  <div className="pl-2 pt-2.5 border-t border-[var(--color-saggin-border)]/80 flex flex-col gap-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <div className="font-semibold text-[var(--color-saggin-text-secondary)] truncate mr-2">
+                        {trip.vehicle?.name || trip.vehicleName || 'Mezzo da assegnare'}
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {trip.needsCrane && (
+                          <span className="bg-red-50 text-[var(--color-brand-red)] border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
+                            <AlertTriangle size={11} />
+                            GRU
+                          </span>
+                        )}
+                        <ArrowRight size={15} className="text-slate-400 group-hover:text-[var(--color-saggin-text-primary)] transition-colors" />
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      {trip.needsCrane && (
-                        <span className="bg-red-50 text-[var(--color-brand-red)] border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
-                          <AlertTriangle size={11} />
-                          GRU
-                        </span>
-                      )}
-                      <ArrowRight size={15} className="text-slate-400 group-hover:text-[var(--color-saggin-text-primary)] transition-colors" />
+                    {/* VEDERE CHI HA CREATO IL VIAGGIO */}
+                    <div className="flex items-center justify-between text-[11px] bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200/80">
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <User size={13} className="text-[var(--color-brand-red)]" />
+                        <span>Creato da:</span>
+                        <strong className="text-[var(--color-saggin-text-primary)]">{trip.createdByName || 'Ufficio Saggin'}</strong>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-medium">Ufficio</span>
                     </div>
                   </div>
 

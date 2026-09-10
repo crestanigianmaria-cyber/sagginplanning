@@ -13,7 +13,8 @@ import {
   Clock,
   MapPin,
   Building2,
-  Users
+  Users,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import StatusBadge from '@/components/shared/StatusBadge';
@@ -306,6 +307,16 @@ export default function PlanningClient({
                           </span>
                         )}
                       </div>
+
+                      <div className="mt-2 pt-2 border-t border-red-100/60 flex items-center justify-between text-[11px] pl-1.5 text-slate-500">
+                        <div className="flex items-center gap-1.5">
+                          <User size={12} className="text-[var(--color-brand-red)]" />
+                          <span>Creato da:</span>
+                          <strong className="text-[var(--color-saggin-text-primary)]">
+                            {trip.createdByName || trip.auditLogs?.find((a: any) => a.action === 'CREATE')?.officeUser?.name || 'Ufficio'}
+                          </strong>
+                        </div>
+                      </div>
                     </div>
                   ))
                 )}
@@ -413,6 +424,17 @@ export default function PlanningClient({
                                 GRU
                               </span>
                             )}
+                          </div>
+
+                          {/* Chi ha creato il viaggio */}
+                          <div className="mt-2 pt-2 border-t border-[var(--color-saggin-border)]/50 flex items-center justify-between text-[11px] pl-1.5 text-slate-500">
+                            <div className="flex items-center gap-1.5">
+                              <User size={12} className="text-[var(--color-brand-red)]" />
+                              <span>Creato da:</span>
+                              <strong className="text-[var(--color-saggin-text-primary)]">
+                                {trip.createdByName || trip.auditLogs?.find((a: any) => a.action === 'CREATE')?.officeUser?.name || 'Ufficio'}
+                              </strong>
+                            </div>
                           </div>
                         </div>
                       );

@@ -59,6 +59,7 @@ export const authOptions: NextAuthOptions = {
           id: driver.id,
           name: driver.name,
           role: driver.role,
+          profilePicture: driver.profilePicture || null,
           userType: 'DRIVER' as const,
         };
       },
@@ -71,6 +72,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = (user as any).role;
         token.userType = (user as any).userType;
+        token.profilePicture = (user as any).profilePicture;
       }
       return token;
     },
@@ -79,6 +81,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
         (session.user as any).userType = token.userType;
+        (session.user as any).profilePicture = token.profilePicture;
       }
       return session;
     },

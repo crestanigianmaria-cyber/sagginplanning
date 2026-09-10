@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Truck, Clock, User, LogOut } from 'lucide-react'
 import { signOut } from 'next-auth/react'
-import { cn } from '@/lib/utils'
+import { cn, getDriverAvatar } from '@/lib/utils'
 
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession()
@@ -18,12 +18,36 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-primary)] flex flex-col font-sans">
       {/* Mobile Driver Header */}
       <header className="bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] px-4 py-3.5 sticky top-0 z-30 flex justify-between items-center shadow-xs">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">{formattedDate}</div>
-          <div className="text-lg font-bold font-space text-[var(--color-saggin-text-primary)] leading-tight">
-            Ciao, {session?.user?.name?.split(' ')[0] || 'Autista'}
-          </div>
-        </div>
+        {(() => {
+          const driverName = session?.user?.name || 'Autista';
+          const avatar = getDriverAvatar(driverName, (session?.user as any)?.profilePicture);
+
+          return (
+            <div className="flex items-center gap-3">
+              <Link href="/profile" className="shrink-0 relative group" title="Visualizza il tuo profilo">
+                {avatar ? (
+                  <img 
+                    src={avatar} 
+                    alt={driverName} 
+                    className="w-10 h-10 rounded-full object-cover border-2 border-[var(--color-brand-red)] shadow-xs"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] flex items-center justify-center font-bold text-sm text-[var(--color-saggin-text-primary)]">
+                    {driverName.charAt(0)}
+                  </div>
+                )}
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--color-success)] border-2 border-white" />
+              </Link>
+
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">{formattedDate}</div>
+                <div className="text-base font-bold font-space text-[var(--color-saggin-text-primary)] leading-tight">
+                  Ciao, {driverName.split(' ')[0]}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="flex items-center gap-2.5">
           <div className="bg-white p-1 rounded-lg border border-[var(--color-saggin-border)] shrink-0 shadow-2xs">

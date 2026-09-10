@@ -11,7 +11,12 @@ export async function GET(request: NextRequest, { params }: any) {
       include: { driver: true, vehicle: true, trailer: true, auditLogs: { include: { officeUser: true }, orderBy: { timestamp: 'desc' } }, gpsTrackPoints: { orderBy: { timestamp: 'asc' } } },
     });
     if (!trip) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
-    return NextResponse.json({ success: true, data: trip });
+    let creatorName = trip.auditLogs?.find((a: any) => a.action === 'CREATE')?.officeUser?.name;
+    if (!creatorName && trip.createdById) {
+      const officeUser = await prisma.officeUser.findUnique({ where: { id: trip.createdById }, select: { name: true } });
+      creatorName = officeUser?.name;
+    }
+    return NextResponse.json({ success: true, data: { ...trip, createdByName: creatorName || 'Ufficio Saggin' } });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -46,11 +51,16 @@ export async function PUT(request: NextRequest, { params }: any) {
       }
     }
 
-    const trip = await prisma.trip.update({ where: { id }, data });
+    const trip = await prisma.trip.update({ where: { id }, data, include: { auditLogs: { include: { officeUser: true } } } });
     if (session && (session.user as any)?.id) {
       await prisma.tripAuditLog.create({ data: { tripId: trip.id, action: 'UPDATE', officeUserId: (session.user as any).id, userType: 'OFFICE' } });
     }
-    return NextResponse.json({ success: true, data: trip });
+    let creatorName = trip.auditLogs?.find((a: any) => a.action === 'CREATE')?.officeUser?.name;
+    if (!creatorName && trip.createdById) {
+      const officeUser = await prisma.officeUser.findUnique({ where: { id: trip.createdById }, select: { name: true } });
+      creatorName = officeUser?.name;
+    }
+    return NextResponse.json({ success: true, data: { ...trip, createdByName: creatorName || 'Ufficio Saggin' } });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -62,11 +72,16 @@ export async function DELETE(request: NextRequest, { params }: any) {
     const session = await getServerSession(authOptions);
     const existing = await prisma.trip.findUnique({ where: { id } });
     if (!existing) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
-    const trip = await prisma.trip.update({ where: { id }, data: { status: 'ANNULLATO' } });
+    const trip = await prisma.trip.update({ where: { id }, data: { status: 'ANNULLATO' }, include: { auditLogs: { include: { officeUser: true } } } });
     if (session && (session.user as any)?.id) {
       await prisma.tripAuditLog.create({ data: { tripId: trip.id, action: 'STATUS_CHANGE', newValue: 'ANNULLATO', officeUserId: (session.user as any).id, userType: 'OFFICE' } });
     }
-    return NextResponse.json({ success: true, data: trip });
+    let creatorName = trip.auditLogs?.find((a: any) => a.action === 'CREATE')?.officeUser?.name;
+    if (!creatorName && trip.createdById) {
+      const officeUser = await prisma.officeUser.findUnique({ where: { id: trip.createdById }, select: { name: true } });
+      creatorName = officeUser?.name;
+    }
+    return NextResponse.json({ success: true, data: { ...trip, createdByName: creatorName || 'Ufficio Saggin' } });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

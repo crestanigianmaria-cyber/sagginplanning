@@ -6,7 +6,8 @@ import {
   Filter, 
   Plus, 
   Search,
-  Route as RouteIcon
+  Route as RouteIcon,
+  User
 } from 'lucide-react';
 import TripForm from '@/components/trips/TripForm';
 import StatusBadge from '@/components/shared/StatusBadge';
@@ -121,11 +122,15 @@ export default function TripsClient({ initialTrips, drivers, vehicles }: any) {
                 </div>
                 <div className="text-sm font-medium text-[var(--color-saggin-text-primary)] mb-1">{trip.address}</div>
                 <div className="text-xs text-[var(--color-saggin-text-secondary)]">{trip.driver?.name}</div>
-                {trip.auditLogs?.find((l: any) => l.action === 'CREATE')?.officeUser?.name && (
-                  <div className="text-[10px] text-[var(--color-saggin-text-secondary)] mt-2 border-t border-[var(--color-saggin-border)] pt-1">
-                    Creato da: <span className="font-medium text-[var(--color-saggin-text-secondary)]">{trip.auditLogs.find((l: any) => l.action === 'CREATE').officeUser.name}</span>
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <User size={13} className="text-[var(--color-brand-red)]" />
+                    <span>Creato da:</span>
+                    <strong className="text-[var(--color-saggin-text-primary)]">
+                      {trip.createdByName || trip.auditLogs?.find((l: any) => l.action === 'CREATE')?.officeUser?.name || 'Ufficio'}
+                    </strong>
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>

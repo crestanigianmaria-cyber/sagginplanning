@@ -50,7 +50,21 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    return NextResponse.json({ success: true, data: trips });
+    const officeUsers = await prisma.officeUser.findMany({ select: { id: true, name: true } });
+    const officeMap = new Map(officeUsers.map(u => [u.id, u.name]));
+
+    const enrichedTrips = trips.map(t => {
+      let creatorName = t.auditLogs?.find(a => a.action === 'CREATE')?.officeUser?.name;
+      if (!creatorName && t.createdById) {
+        creatorName = officeMap.get(t.createdById);
+      }
+      return {
+        ...t,
+        createdByName: creatorName || 'Ufficio Saggin'
+      };
+    });
+
+    return NextResponse.json({ success: true, data: enrichedTrips });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -96,7 +110,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const creatorId = (session && (session.user as any)?.id) ? (session.user as any).id : undefined;
+    const creatorId = body.createdById || ((session && (session.user as any)?.id) ? (session.user as any).id : undefined);
     const trip = await prisma.trip.create({
       data: {
         ...body,

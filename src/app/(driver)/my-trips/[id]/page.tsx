@@ -8,7 +8,7 @@ import {
   CheckCircle, Navigation, Phone, Play, Check, ShieldAlert,
   Calendar, Building2, Hash, FileText
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getDriverAvatar } from '@/lib/utils'
 
 export default function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { data: session } = useSession()
@@ -413,6 +413,26 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
         )}
+
+        {/* CHI HA CREATO IL VIAGGIO (IN FONDO ALLA SCHERMATA) */}
+        <div className="bg-[var(--color-saggin-surface)] rounded-2xl p-4 border border-[var(--color-saggin-border)] flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center text-[var(--color-brand-red)] font-bold font-space text-base shadow-2xs">
+              {(trip.createdByName || 'U').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="text-[10px] uppercase font-semibold text-[var(--color-saggin-text-secondary)] tracking-wider">
+                Viaggio creato da
+              </div>
+              <div className="text-sm font-bold text-[var(--color-saggin-text-primary)]">
+                {trip.createdByName || 'Ufficio Saggin'}
+              </div>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold bg-[var(--color-saggin-elevated)] text-[var(--color-saggin-text-secondary)] px-2.5 py-1 rounded-lg border border-[var(--color-saggin-border)]">
+            Ufficio
+          </span>
+        </div>
 
         {/* RIEPILOGO A LAVORO COMPLETATO */}
         {trip.status === 'COMPLETATO' && (
