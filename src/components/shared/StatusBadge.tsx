@@ -14,7 +14,7 @@ export default function StatusBadge({ status, size = 'md', className }: StatusBa
       case 'DA_FARE':
         return {
           label: 'Da Fare',
-          colors: 'bg-blue-100 text-blue-700 border-blue-200',
+          colors: 'bg-slate-50lue-100 text-blue-700 border-blue-200',
           Icon: Clock
         };
       case 'IN_CORSO':
@@ -32,13 +32,13 @@ export default function StatusBadge({ status, size = 'md', className }: StatusBa
       case 'ANNULLATO':
         return {
           label: 'Annullato',
-          colors: 'bg-gray-100 text-gray-700 border-gray-200',
+          colors: 'bg-slate-50 text-slate-700 border-slate-200',
           Icon: XCircle
         };
       default:
         return {
           label: status,
-          colors: 'bg-gray-100 text-gray-700 border-gray-200',
+          colors: 'bg-slate-50 text-slate-700 border-slate-200',
           Icon: Clock
         };
     }
@@ -61,7 +61,7 @@ export default function StatusBadge({ status, size = 'md', className }: StatusBa
 
   return (
     <div className={cn(
-      "inline-flex items-center font-bold rounded-full border",
+      "inline-flex items-center font-semibold rounded-full border",
       config.colors,
       sizeClasses[size],
       className
