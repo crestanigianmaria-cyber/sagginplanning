@@ -130,38 +130,38 @@ export default function PlanningClient({ initialDrivers, initialTrips, initialVe
 
   return (
     <div className="h-full flex flex-col space-y-6 relative">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 md:p-6 bg-white p-5 md:p-6 rounded-xl  border border-slate-200 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 md:p-6 bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl  border border-[var(--color-saggin-border)] shrink-0">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-rose-900/10 rounded-xl">
-            <Calendar className="h-6 w-6 text-rose-900" />
+          <div className="p-2 bg-[var(--color-brand-red)]/10 rounded-xl">
+            <Calendar className="h-6 w-6 text-[var(--color-brand-red)]" />
           </div>
-          <h1 className="text-2xl font-semibold text-slate-900">Planning Settimanale</h1>
+          <h1 className="text-2xl font-semibold text-[var(--color-saggin-text-primary)]">Planning Settimanale</h1>
         </div>
         
-        <div className="flex items-center gap-3 bg-white p-1.5 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-3 bg-[var(--color-saggin-surface)] p-1.5 rounded-xl border border-[var(--color-saggin-border)]">
           <button 
             onClick={() => changeWeek('prev')}
-            className="p-1.5 hover:bg-slate-50 rounded  text-slate-500 hover:text-slate-900 transition-all"
+            className="p-1.5 hover:bg-[var(--color-saggin-bg)] rounded  text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           
-          <span className="font-medium text-sm px-2 w-52 text-center text-slate-700">
+          <span className="font-medium text-sm px-2 w-52 text-center text-[var(--color-saggin-text-secondary)]">
             {getWeekString()}
           </span>
           
           <button 
             onClick={() => changeWeek('next')}
-            className="p-1.5 hover:bg-slate-50 rounded  text-slate-500 hover:text-slate-900 transition-all"
+            className="p-1.5 hover:bg-[var(--color-saggin-bg)] rounded  text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
           
-          <div className="w-px h-6 bg-slate-50 mx-1"></div>
+          <div className="w-px h-6 bg-[var(--color-saggin-bg)] mx-1"></div>
           
           <button 
             onClick={setToday}
-            className="px-3 py-1.5 text-sm font-medium text-rose-900 hover:bg-rose-900/10 rounded transition-colors"
+            className="px-3 py-1.5 text-sm font-medium text-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/10 rounded transition-colors"
           >
             Oggi
           </button>
@@ -176,8 +176,8 @@ export default function PlanningClient({ initialDrivers, initialTrips, initialVe
             className={cn(
               "px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all  border",
               selectedDay === day.id
-                ? "bg-rose-900 text-white border-rose-900 "
-                : "bg-white text-slate-500 border-slate-200 hover:border-slate-200 hover:bg-slate-50"
+                ? "bg-[var(--color-brand-red)] text-white border-[var(--color-brand-red)] "
+                : "bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-secondary)] border-[var(--color-saggin-border)] hover:border-[var(--color-saggin-border)] hover:bg-[var(--color-saggin-bg)]"
             )}
           >
             {day.name}
@@ -185,10 +185,10 @@ export default function PlanningClient({ initialDrivers, initialTrips, initialVe
         ))}
       </div>
 
-      <div className="flex-1 overflow-x-auto overflow-y-hidden bg-white rounded-xl  border border-slate-200 relative">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden bg-[var(--color-saggin-surface)] rounded-xl  border border-[var(--color-saggin-border)] relative">
         {isLoading ? (
-          <div className="h-full flex flex-col items-center justify-center text-slate-500">
-            <Loader2 className="h-10 w-10 animate-spin mb-4 text-rose-900" />
+          <div className="h-full flex flex-col items-center justify-center text-[var(--color-saggin-text-secondary)]">
+            <Loader2 className="h-10 w-10 animate-spin mb-4 text-[var(--color-brand-red)]" />
             <p className="font-medium">Caricamento planning...</p>
           </div>
         ) : (
@@ -199,10 +199,10 @@ export default function PlanningClient({ initialDrivers, initialTrips, initialVe
                 .sort((a: any, b: any) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
 
               return (
-                <div key={driver.id} className="w-80 flex-shrink-0 border-r border-slate-200 flex flex-col h-full bg-white/50">
-                  <div className="p-5 md:p-6 border-b border-slate-200 bg-white sticky top-0 z-10 ">
-                    <h3 className="font-semibold text-slate-900 truncate">{driver.name}</h3>
-                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                <div key={driver.id} className="w-80 flex-shrink-0 border-r border-[var(--color-saggin-border)] flex flex-col h-full bg-[var(--color-saggin-surface)]/50">
+                  <div className="p-5 md:p-6 border-b border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] sticky top-0 z-10 ">
+                    <h3 className="font-semibold text-[var(--color-saggin-text-primary)] truncate">{driver.name}</h3>
+                    <p className="text-xs text-[var(--color-saggin-text-secondary)] flex items-center gap-1 mt-1">
                       <Truck className="h-3 w-3" />
                       {driver.defaultVehicle?.name || 'Nessun mezzo'}
                     </p>
@@ -213,23 +213,23 @@ export default function PlanningClient({ initialDrivers, initialTrips, initialVe
                       <div 
                         key={trip.id}
                         onClick={() => handleTripClick(trip.id)}
-                        className="bg-white border border-slate-200 hover:border-rose-900 p-3 rounded-xl  cursor-pointer transition-all hover:-translate-y-0.5 relative overflow-hidden"
+                        className="bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] hover:border-[var(--color-brand-red)] p-3 rounded-xl  cursor-pointer transition-all hover:-translate-y-0.5 relative overflow-hidden"
                       >
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gray-200"></div>
                         
                         <div className="flex justify-between items-start mb-2 pl-2">
-                          <span className="font-semibold text-rose-900">{trip.scheduledTime}</span>
+                          <span className="font-semibold text-[var(--color-brand-red)]">{trip.scheduledTime}</span>
                           <StatusBadge status={trip.status} size="sm" />
                         </div>
                         
                         <div className="pl-2">
-                          <div className="text-sm font-medium text-slate-900 mb-1 leading-tight">{trip.cargoDescription}</div>
-                          <div className="text-xs text-slate-500 line-clamp-2">{trip.address}</div>
+                          <div className="text-sm font-medium text-[var(--color-saggin-text-primary)] mb-1 leading-tight">{trip.cargoDescription}</div>
+                          <div className="text-xs text-[var(--color-saggin-text-secondary)] line-clamp-2">{trip.address}</div>
                         </div>
                         
                         {trip.needsCrane && (
-                          <div className="mt-3 pl-2 flex items-center gap-1 text-[10px] font-semibold text-slate-900">
-                            <span className="bg-rose-900 px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <div className="mt-3 pl-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--color-saggin-text-primary)]">
+                            <span className="bg-[var(--color-brand-red)] px-1.5 py-0.5 rounded flex items-center gap-1">
                               <AlertCircle className="h-3 w-3" /> GRU
                             </span>
                           </div>
@@ -239,7 +239,7 @@ export default function PlanningClient({ initialDrivers, initialTrips, initialVe
 
                     <button 
                       onClick={() => handleAddTrip(driver.id)}
-                      className="w-full mt-2 py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 hover:text-rose-900 hover:border-rose-900/50 hover:bg-rose-900/5 transition-all flex items-center justify-center gap-2"
+                      className="w-full mt-2 py-3 border-2 border-dashed border-[var(--color-saggin-border)] rounded-xl text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-brand-red)] hover:border-[var(--color-brand-red)]/50 hover:bg-[var(--color-brand-red)]/5 transition-all flex items-center justify-center gap-2"
                     >
                       <Plus className="h-4 w-4" />
                       <span className="text-sm font-medium">Aggiungi</span>
@@ -254,12 +254,12 @@ export default function PlanningClient({ initialDrivers, initialTrips, initialVe
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-5 md:p-6 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-sm w-full max-w-5xl h-full sm:h-[90vh] flex flex-col overflow-hidden border border-slate-200">
-            <div className="flex justify-between items-center p-5 md:p-6 border-b border-slate-200 shrink-0">
-              <h2 className="text-xl font-semibold text-slate-900">
+          <div className="bg-[var(--color-saggin-surface)] rounded-2xl  w-full max-w-5xl h-full sm:h-[90vh] flex flex-col overflow-hidden border border-[var(--color-saggin-border)]">
+            <div className="flex justify-between items-center p-5 md:p-6 border-b border-[var(--color-saggin-border)] shrink-0">
+              <h2 className="text-xl font-semibold text-[var(--color-saggin-text-primary)]">
                 {selectedTripId ? 'Modifica Viaggio' : 'Nuovo Viaggio'}
               </h2>
-              <button onClick={closeModal} className="p-2 text-slate-500 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition-colors">
+              <button onClick={closeModal} className="p-2 text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] rounded-xl hover:bg-[var(--color-saggin-bg)] transition-colors">
                 <X className="h-6 w-6" />
               </button>
             </div>

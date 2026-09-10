@@ -156,6 +156,7 @@ model Driver {
   role             DriverRole      @default(AUTISTA)
   status           DriverStatus    @default(ATTIVO)
   defaultVehicleId String?
+  profilePicture   String?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
@@ -183,11 +184,12 @@ model Trip {
   id                 String          @id @default(cuid())
   date               DateTime
   scheduledTime      String
-  driverId           String
-  vehicleId          String
+  driverId           String?
+  vehicleId          String?
   trailerId          String?
   vehicleConfigId    String?
   cargoDescription   String
+  clientName         String?
   cargoWeight        Int?
   cargoLength        Float?
   cargoWidth         Float?
@@ -219,8 +221,8 @@ model Trip {
   createdById        String?
   createdByType      UserType?
 
-  driver             Driver          @relation(fields: [driverId], references: [id], onDelete: Restrict)
-  vehicle            Vehicle         @relation("TripVehicle", fields: [vehicleId], references: [id], onDelete: Restrict)
+  driver             Driver?            @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  vehicle            Vehicle?           @relation("TripVehicle", fields: [vehicleId], references: [id], onDelete: Restrict)
   trailer            Vehicle?        @relation("TripTrailer", fields: [trailerId], references: [id], onDelete: SetNull)
   auditLogs          TripAuditLog[]
   gpsTrackPoints     GpsTrackPoint[]
@@ -261,7 +263,7 @@ model GpsTrackPoint {
   timestamp DateTime @default(now())
 
   trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  driver             Driver?            @relation(fields: [driverId], references: [id], onDelete: Cascade)
 
   @@index([tripId, timestamp])
   @@index([driverId, timestamp])

@@ -85,23 +85,23 @@ export default function PinLoginPage() {
 
   if (!selectedDriver) {
     return (
-      <div className="min-h-screen bg-slate-50 p-6 text-slate-900 flex flex-col">
+      <div className="min-h-screen bg-[var(--color-saggin-bg)] p-6 text-[var(--color-saggin-text-primary)] flex flex-col">
         <h1 className="text-3xl font-semibold mt-12 mb-8 text-center">Chi sei?</h1>
         <div className="space-y-4 flex-1">
           {drivers.map(d => (
             <button
               key={d.id}
               onClick={() => setSelectedDriver(d)}
-              className="w-full bg-white/10 hover:bg-white/20 p-6 rounded-2xl flex items-center gap-6 active:scale-95 transition-transform"
+              className="w-full bg-[var(--color-saggin-surface)]/10 hover:bg-[var(--color-saggin-surface)]/20 p-6 rounded-2xl flex items-center gap-6 active:scale-95 transition-transform"
             >
-              <div className="w-16 h-16 rounded-full bg-rose-900 text-white text-2xl font-semibold flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-[var(--color-brand-red)] text-white text-2xl font-semibold flex items-center justify-center">
                 {d.initials || d.name.substring(0, 2).toUpperCase()}
               </div>
               <span className="text-2xl font-medium">{d.name}</span>
             </button>
           ))}
           {drivers.length === 0 && (
-            <div className="flex justify-center"><div className="animate-spin h-10 w-10 border-4 border-rose-900 border-t-transparent rounded-full"></div></div>
+            <div className="flex justify-center"><div className="animate-spin h-10 w-10 border-4 border-[var(--color-brand-red)] border-t-transparent rounded-full"></div></div>
           )}
         </div>
       </div>
@@ -109,20 +109,20 @@ export default function PinLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 text-slate-900 flex flex-col items-center justify-center relative">
+    <div className="min-h-screen bg-[var(--color-saggin-bg)] p-6 text-[var(--color-saggin-text-primary)] flex flex-col items-center justify-center relative">
       <button 
         onClick={() => { setSelectedDriver(null); setPin(''); setError(false); }}
-        className="absolute top-8 left-6 text-slate-900/70 font-medium text-lg active:text-slate-900"
+        className="absolute top-8 left-6 text-[var(--color-saggin-text-primary)]/70 font-medium text-lg active:text-[var(--color-saggin-text-primary)]"
       >
         ← Indietro
       </button>
 
       <div className="mb-12 flex flex-col items-center">
-        <div className="w-20 h-20 rounded-full bg-rose-900 text-white text-3xl font-semibold flex items-center justify-center mb-6 shadow-sm">
+        <div className="w-20 h-20 rounded-full bg-[var(--color-brand-red)] text-white text-3xl font-semibold flex items-center justify-center mb-6 ">
           {selectedDriver.initials || selectedDriver.name.substring(0, 2).toUpperCase()}
         </div>
         <h2 className="text-3xl font-medium">Ciao, {selectedDriver.name}</h2>
-        <p className="text-slate-900/60 mt-2">Inserisci il tuo PIN</p>
+        <p className="text-[var(--color-saggin-text-primary)]/60 mt-2">Inserisci il tuo PIN</p>
       </div>
 
       <div className={`flex gap-6 mb-16 ${error ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
@@ -131,7 +131,7 @@ export default function PinLoginPage() {
             key={i} 
             className={`w-6 h-6 rounded-full border-2 transition-colors duration-200 ${
               pin.length > i 
-                ? 'bg-rose-900 border-rose-900' 
+                ? 'bg-[var(--color-brand-red)] border-[var(--color-brand-red)]' 
                 : error ? 'border-red-500' : 'border-white/30'
             }`} 
           />
@@ -139,14 +139,14 @@ export default function PinLoginPage() {
       </div>
 
       {error && <div className="text-red-700 mb-8 font-medium">PIN errato, riprova</div>}
-      {loading && <div className="text-slate-900 mb-8 font-medium">Accesso in corso...</div>}
+      {loading && <div className="text-[var(--color-saggin-text-primary)] mb-8 font-medium">Accesso in corso...</div>}
 
       <div className="grid grid-cols-3 gap-x-12 gap-y-8 w-full max-w-[320px]">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
           <button
             key={num}
             onClick={() => handleKeyPress(num.toString())}
-            className="w-[72px] h-[72px] rounded-full bg-white/10 text-3xl font-medium flex items-center justify-center active:bg-white/30 transition-colors mx-auto"
+            className="w-[72px] h-[72px] rounded-full bg-[var(--color-saggin-surface)]/10 text-3xl font-medium flex items-center justify-center active:bg-[var(--color-saggin-surface)]/30 transition-colors mx-auto"
           >
             {num}
           </button>
@@ -154,13 +154,13 @@ export default function PinLoginPage() {
         <div />
         <button
           onClick={() => handleKeyPress('0')}
-          className="w-[72px] h-[72px] rounded-full bg-white/10 text-3xl font-medium flex items-center justify-center active:bg-white/30 transition-colors mx-auto"
+          className="w-[72px] h-[72px] rounded-full bg-[var(--color-saggin-surface)]/10 text-3xl font-medium flex items-center justify-center active:bg-[var(--color-saggin-surface)]/30 transition-colors mx-auto"
         >
           0
         </button>
         <button
           onClick={() => handleKeyPress('back')}
-          className="w-[72px] h-[72px] rounded-full bg-transparent text-slate-900/70 text-xl font-medium flex items-center justify-center active:text-slate-900 transition-colors mx-auto"
+          className="w-[72px] h-[72px] rounded-full bg-transparent text-[var(--color-saggin-text-primary)]/70 text-xl font-medium flex items-center justify-center active:text-[var(--color-saggin-text-primary)] transition-colors mx-auto"
         >
           ⌫
         </button>

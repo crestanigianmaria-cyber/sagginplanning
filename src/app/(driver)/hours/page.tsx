@@ -23,7 +23,7 @@ export default function HoursPage() {
 
   if (loading) return (
     <div className="flex justify-center items-center h-[50vh]">
-      <div className="animate-spin h-10 w-10 border-4 border-rose-900 border-t-transparent rounded-full"></div>
+      <div className="animate-spin h-10 w-10 border-4 border-[var(--color-brand-red)] border-t-transparent rounded-full"></div>
     </div>
   )
 
@@ -56,25 +56,25 @@ export default function HoursPage() {
 
   return (
     <div className="p-5 md:p-6 space-y-5">
-      <h1 className="text-2xl font-bold text-slate-900">Riepilogo Ore</h1>
+      <h1 className="text-2xl font-bold text-[var(--color-saggin-text-primary)]">Riepilogo Ore</h1>
 
-      <section className="bg-white rounded-2xl p-6 border border-slate-200">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Oggi</h2>
-        <div className="text-5xl font-bold text-slate-900 mb-1">
-          {todayHours} <span className="text-2xl text-slate-500 font-medium">/ 8h</span>
+      <section className="bg-[var(--color-saggin-surface)] rounded-2xl p-6 border border-[var(--color-saggin-border)]">
+        <h2 className="text-xs font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider mb-4">Oggi</h2>
+        <div className="text-5xl font-bold text-[var(--color-saggin-text-primary)] mb-1">
+          {todayHours} <span className="text-2xl text-[var(--color-saggin-text-secondary)] font-medium">/ 8h</span>
         </div>
-        <div className="w-full bg-slate-50 rounded-full h-3 mt-4 mb-6 overflow-hidden">
-          <div className="bg-rose-900 h-3 rounded-full transition-all" style={{ width: todayPct + '%' }} />
+        <div className="w-full bg-[var(--color-saggin-bg)] rounded-full h-3 mt-4 mb-6 overflow-hidden">
+          <div className="bg-[var(--color-brand-red)] h-3 rounded-full transition-all" style={{ width: todayPct + '%' }} />
         </div>
-        <h3 className="font-semibold text-slate-500 text-xs uppercase tracking-wider mb-3">Viaggi completati oggi:</h3>
+        <h3 className="font-semibold text-[var(--color-saggin-text-secondary)] text-xs uppercase tracking-wider mb-3">Viaggi completati oggi:</h3>
         {todayTrips.length === 0 ? (
-          <p className="text-slate-500 text-sm">Nessun viaggio completato oggi</p>
+          <p className="text-[var(--color-saggin-text-secondary)] text-sm">Nessun viaggio completato oggi</p>
         ) : (
           <div className="space-y-2">
             {todayTrips.map((t: any) => (
-              <div key={t.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <span className="font-medium text-slate-700 truncate mr-4 text-sm">{t.cargoDescription}</span>
-                <span className="font-semibold text-rose-900 whitespace-nowrap text-sm">
+              <div key={t.id} className="flex justify-between items-center bg-[var(--color-saggin-bg)] p-3 rounded-xl border border-[var(--color-saggin-border)]">
+                <span className="font-medium text-[var(--color-saggin-text-secondary)] truncate mr-4 text-sm">{t.cargoDescription}</span>
+                <span className="font-semibold text-[var(--color-brand-red)] whitespace-nowrap text-sm">
                   {t.workedMinutes ? Math.floor(t.workedMinutes / 60) + 'h ' + (t.workedMinutes % 60) + 'm' : 'N/D'}
                 </span>
               </div>
@@ -83,10 +83,10 @@ export default function HoursPage() {
         )}
       </section>
 
-      <section className="bg-white rounded-2xl p-6 border border-slate-200">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Questa Settimana</h2>
-        <div className="text-3xl font-bold text-slate-900 mb-6">
-          {weekTotal} <span className="text-lg text-slate-500 font-medium">ore totali</span>
+      <section className="bg-[var(--color-saggin-surface)] rounded-2xl p-6 border border-[var(--color-saggin-border)]">
+        <h2 className="text-xs font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider mb-4">Questa Settimana</h2>
+        <div className="text-3xl font-bold text-[var(--color-saggin-text-primary)] mb-6">
+          {weekTotal} <span className="text-lg text-[var(--color-saggin-text-secondary)] font-medium">ore totali</span>
         </div>
         <div className="flex items-end justify-between h-28 gap-1.5">
           {weekData.map((d, i) => {
@@ -94,28 +94,28 @@ export default function HoursPage() {
             const isToday = i === todayIdx
             return (
               <div key={i} className="flex flex-col items-center gap-1 flex-1">
-                {d.hours > 0 && <div className="text-[10px] font-semibold text-slate-500">{d.hours}</div>}
-                <div className="w-full bg-slate-50 rounded-t-md flex-1 relative overflow-hidden">
+                {d.hours > 0 && <div className="text-[10px] font-semibold text-[var(--color-saggin-text-secondary)]">{d.hours}</div>}
+                <div className="w-full bg-[var(--color-saggin-bg)] rounded-t-md flex-1 relative overflow-hidden">
                   <div
-                    className={'absolute bottom-0 w-full rounded-t-md ' + (isToday ? 'bg-rose-900' : 'bg-zinc-600')}
+                    className={'absolute bottom-0 w-full rounded-t-md ' + (isToday ? 'bg-[var(--color-brand-red)]' : 'bg-zinc-600')}
                     style={{ height: pct + '%' }}
                   />
                 </div>
-                <div className={'text-xs font-semibold ' + (isToday ? 'text-rose-900' : 'text-slate-500')}>{d.day}</div>
+                <div className={'text-xs font-semibold ' + (isToday ? 'text-[var(--color-brand-red)]' : 'text-[var(--color-saggin-text-secondary)]')}>{d.day}</div>
               </div>
             )
           })}
         </div>
       </section>
 
-      <section className="bg-white rounded-2xl p-5 border border-slate-200 flex items-center gap-5 md:p-6">
-        <div className="p-3 bg-rose-900/10 rounded-xl border border-rose-900/20">
-          <Clock size={28} className="text-rose-900" />
+      <section className="bg-[var(--color-saggin-surface)] rounded-2xl p-5 border border-[var(--color-saggin-border)] flex items-center gap-5 md:p-6">
+        <div className="p-3 bg-[var(--color-brand-red)]/10 rounded-xl border border-[var(--color-brand-red)]/20">
+          <Clock size={28} className="text-[var(--color-brand-red)]" />
         </div>
         <div>
-          <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Totale ultimi 30gg</div>
-          <div className="text-2xl font-bold text-slate-900">{totalHours} ore</div>
-          <div className="text-xs text-slate-500">{completed.length} viaggi completati</div>
+          <div className="text-xs text-[var(--color-saggin-text-secondary)] font-semibold uppercase tracking-wider">Totale ultimi 30gg</div>
+          <div className="text-2xl font-bold text-[var(--color-saggin-text-primary)]">{totalHours} ore</div>
+          <div className="text-xs text-[var(--color-saggin-text-secondary)]">{completed.length} viaggi completati</div>
         </div>
       </section>
     </div>

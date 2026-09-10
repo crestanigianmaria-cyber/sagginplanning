@@ -204,54 +204,54 @@ export default function TripForm({
       {/* Form Fields */}
       <div className="flex-1 p-6 overflow-y-auto space-y-8">
         <div>
-          <h2 className="text-xl font-semibold text-rose-900 mb-1">
+          <h2 className="text-xl font-semibold text-[var(--color-brand-red)] mb-1">
             {trip ? 'Modifica Viaggio' : 'Nuovo Viaggio'}
           </h2>
-          <p className="text-sm text-slate-500">Compila i dettagli per pianificare il viaggio.</p>
+          <p className="text-sm text-[var(--color-saggin-text-secondary)]">Compila i dettagli per pianificare il viaggio.</p>
         </div>
 
         {/* Sezione 1: Assegnazione */}
-        <section className="bg-white p-5 md:p-6 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-2 mb-4 text-rose-900">
+        <section className="bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl border border-[var(--color-saggin-border)]">
+          <div className="flex items-center gap-2 mb-4 text-[var(--color-brand-red)]">
             <User className="h-5 w-5" />
             <h3 className="font-semibold">Assegnazione</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:p-6">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Autista *</label>
-              <select name="driverId" value={formData.driverId} onChange={handleChange} required className="w-full rounded-lg border-slate-200 bg-white text-slate-900  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border">
+              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Autista *</label>
+              <select name="driverId" value={formData.driverId} onChange={handleChange} required className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">
   <option value="">Seleziona...</option>
   {drivers?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
 </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Data *</label>
-              <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full rounded-lg border-slate-200 bg-white text-slate-900   focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Data *</label>
+              <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]   focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Orario previsto *</label>
-              <input type="time" name="time" value={formData.time} onChange={handleChange} required className="w-full rounded-lg border-slate-200 bg-white text-slate-900   focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Orario previsto *</label>
+              <input type="time" name="time" value={formData.time} onChange={handleChange} required className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]   focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
             </div>
           </div>
         </section>
 
         {/* Sezione 2: Mezzo */}
-        <section className="bg-white p-5 md:p-6 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-2 mb-4 text-rose-900">
+        <section className="bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl border border-[var(--color-saggin-border)]">
+          <div className="flex items-center gap-2 mb-4 text-[var(--color-brand-red)]">
             <Truck className="h-5 w-5" />
             <h3 className="font-semibold">Mezzo e Allestimento</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:p-6">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Veicolo Trattore *</label>
-              <select name="vehicleId" value={formData.vehicleId} onChange={handleChange} required className="w-full rounded-lg border-slate-200 bg-white text-slate-900  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border">
+              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Veicolo Trattore *</label>
+              <select name="vehicleId" value={formData.vehicleId} onChange={handleChange} required className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">
   <option value="">Seleziona...</option>
   {vehicles?.filter((v:any) => v.type !== 'RIMORCHIO').map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
 </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Rimorchio (Opzionale)</label>
-              <select name="trailerId" value={formData.trailerId} onChange={handleChange} className="w-full rounded-lg border-slate-200 bg-white text-slate-900  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border">
+              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Rimorchio (Opzionale)</label>
+              <select name="trailerId" value={formData.trailerId} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">
   <option value="">Nessuno</option>
   {vehicles?.filter((v:any) => v.type === 'RIMORCHIO').map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
 </select>
@@ -260,55 +260,55 @@ export default function TripForm({
         </section>
 
         {/* Sezione 3: Carico */}
-        <section className="bg-white p-5 md:p-6 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-2 mb-4 text-rose-900">
+        <section className="bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl border border-[var(--color-saggin-border)]">
+          <div className="flex items-center gap-2 mb-4 text-[var(--color-brand-red)]">
             <Package className="h-5 w-5" />
             <h3 className="font-semibold">Dettagli Carico</h3>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Descrizione Merce *</label>
-              <input type="text" name="cargoDesc" value={formData.cargoDesc} onChange={handleChange} required className="w-full rounded-lg border-slate-200  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Descrizione Merce *</label>
+              <input type="text" name="cargoDesc" value={formData.cargoDesc} onChange={handleChange} required className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-5 gap-5 md:p-6">
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-700 mb-1">Peso stimato (kg)</label>
-                <input type="number" name="weightKg" value={formData.weightKg} onChange={handleChange} className="w-full rounded-lg border-slate-200  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Peso stimato (kg)</label>
+                <input type="number" name="weightKg" value={formData.weightKg} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Lung. (m)</label>
-                <input type="number" step="0.1" name="lengthM" value={formData.lengthM} onChange={handleChange} className="w-full rounded-lg border-slate-200  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Lung. (m)</label>
+                <input type="number" step="0.1" name="lengthM" value={formData.lengthM} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Larg. (m)</label>
-                <input type="number" step="0.1" name="widthM" value={formData.widthM} onChange={handleChange} className="w-full rounded-lg border-slate-200  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Larg. (m)</label>
+                <input type="number" step="0.1" name="widthM" value={formData.widthM} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Alt. (m)</label>
-                <input type="number" step="0.1" name="heightM" value={formData.heightM} onChange={handleChange} className="w-full rounded-lg border-slate-200  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Alt. (m)</label>
+                <input type="number" step="0.1" name="heightM" value={formData.heightM} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
             </div>
           </div>
         </section>
 
         {/* Sezione 4: Gru */}
-        <section className="bg-white p-5 md:p-6 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-2 mb-4 text-rose-900">
+        <section className="bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl border border-[var(--color-saggin-border)]">
+          <div className="flex items-center gap-2 mb-4 text-[var(--color-brand-red)]">
             <Anchor className="h-5 w-5" />
             <h3 className="font-semibold">Operazioni con Gru</h3>
           </div>
           <div className="flex items-center mb-4">
-            <input type="checkbox" id="needsCrane" name="needsCrane" checked={formData.needsCrane} onChange={handleChange} className="h-4 w-4 text-rose-900 focus:ring-[#dc2626] border-slate-200 rounded" />
-            <label htmlFor="needsCrane" className="ml-2 block text-sm text-slate-900 font-medium">
+            <input type="checkbox" id="needsCrane" name="needsCrane" checked={formData.needsCrane} onChange={handleChange} className="h-4 w-4 text-[var(--color-brand-red)] focus:ring-[#dc2626] border-[var(--color-saggin-border)] rounded" />
+            <label htmlFor="needsCrane" className="ml-2 block text-sm text-[var(--color-saggin-text-primary)] font-medium">
               Richiede l'utilizzo della gru
             </label>
           </div>
           {formData.needsCrane && (
-            <div className="mt-4 p-5 md:p-6 bg-white border border-slate-200 rounded-xl">
-              <label className="block text-xs font-medium text-slate-700 mb-2">Raggio di lavoro stimato (Metri): {formData.craneRadiusM}m</label>
+            <div className="mt-4 p-5 md:p-6 bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] rounded-xl">
+              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-2">Raggio di lavoro stimato (Metri): {formData.craneRadiusM}m</label>
               <input type="range" name="craneRadiusM" min="1" max="30" value={formData.craneRadiusM} onChange={handleChange} className="w-full h-2 bg-gray-200 rounded-xl appearance-none cursor-pointer accent-[#dc2626]" />
-              <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <div className="flex justify-between text-xs text-[var(--color-saggin-text-secondary)] mt-1">
                 <span>1m</span>
                 <span>15m</span>
                 <span>30m</span>
@@ -318,15 +318,15 @@ export default function TripForm({
         </section>
 
         {/* Sezione 5: Destinazione e Mappe */}
-        <section className="bg-white p-5 md:p-6 rounded-xl border border-slate-200 relative">
-          <div className="flex items-center gap-2 mb-4 text-rose-900">
+        <section className="bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl border border-[var(--color-saggin-border)] relative">
+          <div className="flex items-center gap-2 mb-4 text-[var(--color-brand-red)]">
             <MapPin className="h-5 w-5" />
             <h3 className="font-semibold">Destinazione e Percorso</h3>
           </div>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Indirizzo di Consegna (Ricerca Automatica) *</label>
+              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Indirizzo di Consegna (Ricerca Automatica) *</label>
               <div className="relative">
                 <input 
                   type="text" 
@@ -338,21 +338,21 @@ export default function TripForm({
                   }} 
                   placeholder="Inizia a digitare l'indirizzo (es. Via Roma 1, Padova)..."
                   required 
-                  className="w-full rounded-lg border-slate-200 bg-white text-slate-900  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border pr-10" 
+                  className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border pr-10" 
                   autoComplete="off"
                 />
                 {isSearchingAddress && (
                   <div className="absolute right-3 top-2.5">
-                    <div className="animate-spin h-5 w-5 border-2 border-rose-900 border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-5 w-5 border-2 border-[var(--color-brand-red)] border-t-transparent rounded-full"></div>
                   </div>
                 )}
                 {suggestions.length > 0 && (
-                  <ul className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-sm max-h-60 overflow-auto">
+                  <ul className="absolute z-50 w-full mt-1 bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] rounded-lg  max-h-60 overflow-auto">
                     {suggestions.map((s, i) => (
                       <li 
                         key={i} 
                         onClick={() => selectAddress(s)}
-                        className="px-4 py-3 hover:bg-slate-50 cursor-pointer text-sm text-slate-900 border-b border-slate-200 last:border-0 transition-colors"
+                        className="px-4 py-3 hover:bg-[var(--color-saggin-bg)] cursor-pointer text-sm text-[var(--color-saggin-text-primary)] border-b border-[var(--color-saggin-border)] last:border-0 transition-colors"
                       >
                         {s.display_name}
                       </li>
@@ -363,20 +363,20 @@ export default function TripForm({
             </div>
 
             <div className="flex gap-5 md:p-6">
-              <div className="flex-1 bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3">
-                <div className="bg-slate-50 p-2 rounded-full"><MapPin size={16} className="text-slate-500" /></div>
+              <div className="flex-1 bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] rounded-xl p-3 flex items-center gap-3">
+                <div className="bg-[var(--color-saggin-bg)] p-2 rounded-full"><MapPin size={16} className="text-[var(--color-saggin-text-secondary)]" /></div>
                 <div>
-                  <div className="text-[10px] text-slate-500 font-semibold uppercase">Distanza Stimata</div>
-                  <div className="text-sm font-medium text-slate-900">
+                  <div className="text-[10px] text-[var(--color-saggin-text-secondary)] font-semibold uppercase">Distanza Stimata</div>
+                  <div className="text-sm font-medium text-[var(--color-saggin-text-primary)]">
                     {(formData as any).estimatedDistanceKm ? `${(formData as any).estimatedDistanceKm} km` : '--'}
                   </div>
                 </div>
               </div>
-              <div className="flex-1 bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3">
-                <div className="bg-slate-50 p-2 rounded-full"><FileText size={16} className="text-slate-500" /></div>
+              <div className="flex-1 bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] rounded-xl p-3 flex items-center gap-3">
+                <div className="bg-[var(--color-saggin-bg)] p-2 rounded-full"><FileText size={16} className="text-[var(--color-saggin-text-secondary)]" /></div>
                 <div>
-                  <div className="text-[10px] text-slate-500 font-semibold uppercase">Tempo Previsto</div>
-                  <div className="text-sm font-medium text-slate-900">
+                  <div className="text-[10px] text-[var(--color-saggin-text-secondary)] font-semibold uppercase">Tempo Previsto</div>
+                  <div className="text-sm font-medium text-[var(--color-saggin-text-primary)]">
                     {(formData as any).estimatedDurationMins ? `${(formData as any).estimatedDurationMins} min` : '--'}
                   </div>
                 </div>
@@ -385,41 +385,41 @@ export default function TripForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:p-6 pt-2">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Contatto in cantiere</label>
-                <input type="text" name="contactName" value={formData.contactName} onChange={handleChange} className="w-full rounded-lg border-slate-200 bg-white text-slate-900  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Contatto in cantiere</label>
+                <input type="text" name="contactName" value={formData.contactName} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Telefono</label>
-                <input type="text" name="contactPhone" value={formData.contactPhone} onChange={handleChange} className="w-full rounded-lg border-slate-200 bg-white text-slate-900  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Telefono</label>
+                <input type="text" name="contactPhone" value={formData.contactPhone} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
             </div>
           </div>
         </section>
 
         {/* Sezione 6: Note */}
-        <section className="bg-white p-5 md:p-6 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-2 mb-4 text-rose-900">
+        <section className="bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl border border-[var(--color-saggin-border)]">
+          <div className="flex items-center gap-2 mb-4 text-[var(--color-brand-red)]">
             <FileText className="h-5 w-5" />
             <h3 className="font-semibold">Note Aggiuntive</h3>
           </div>
-          <textarea name="notes" rows={3} value={formData.notes} onChange={handleChange} className="w-full rounded-lg border-slate-200  focus:border-rose-900 focus:ring-[#dc2626] text-sm py-2 px-3 border"></textarea>
+          <textarea name="notes" rows={3} value={formData.notes} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border"></textarea>
         </section>
       </div>
 
       {/* Safety Check Sidebar */}
-      <div className="w-full lg:w-80 bg-slate-50/50 border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col p-6 shrink-0">
-        <h3 className="text-lg font-semibold text-rose-900 flex items-center gap-2 mb-6">
+      <div className="w-full lg:w-80 bg-[var(--color-saggin-bg)]/50 border-t lg:border-t-0 lg:border-l border-[var(--color-saggin-border)] flex flex-col p-6 shrink-0">
+        <h3 className="text-lg font-semibold text-[var(--color-brand-red)] flex items-center gap-2 mb-6">
           <ShieldCheck className="h-5 w-5" />
           Controllo Sicurezza
         </h3>
 
         <div className="flex-1 space-y-4">
           {!formData.vehicleId || !formData.weightKg ? (
-            <div className="text-sm text-slate-500 text-center py-8">
+            <div className="text-sm text-[var(--color-saggin-text-secondary)] text-center py-8">
               Inserisci mezzo e peso per abilitare i controlli di sicurezza in tempo reale.
             </div>
           ) : isChecking ? (
-            <div className="text-sm text-slate-500 text-center py-8 animate-pulse">
+            <div className="text-sm text-[var(--color-saggin-text-secondary)] text-center py-8 animate-pulse">
               Analisi in corso...
             </div>
           ) : safetyCheck ? (
@@ -428,7 +428,7 @@ export default function TripForm({
               <div className={cn(
                 "p-5 md:p-6 rounded-xl border-2 flex items-center gap-3",
                 safetyCheck.status === 'OK' ? "bg-green-50 border-green-200 text-green-700" :
-                safetyCheck.status === 'WARNING' ? "bg-amber-50 border-amber-200 text-amber-600" :
+                safetyCheck.status === 'WARNING' ? "bg-amber-50 border-amber-200 text-[var(--color-warning)]" :
                 "bg-red-50 border-red-200 text-red-700"
               )}>
                 {safetyCheck.status === 'OK' ? <ShieldCheck className="h-8 w-8" /> :
@@ -445,7 +445,7 @@ export default function TripForm({
 
               {/* Individual Checks */}
               <div className="space-y-3 mt-6">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Dettaglio Controlli</h4>
+                <h4 className="text-xs font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider mb-2">Dettaglio Controlli</h4>
                 {safetyCheck.messages.map((msg: any, idx: number) => (
                   <div key={idx} className={cn(
                     "p-3 rounded-xl border text-sm",
@@ -456,10 +456,10 @@ export default function TripForm({
                     <div className={cn(
                       "font-semibold mb-1",
                       msg.type === 'success' ? "text-green-700" :
-                      msg.type === 'warning' ? "text-amber-600" :
+                      msg.type === 'warning' ? "text-[var(--color-warning)]" :
                       "text-red-700"
                     )}>{msg.title}</div>
-                    <div className="text-slate-500 text-xs">{msg.detail}</div>
+                    <div className="text-[var(--color-saggin-text-secondary)] text-xs">{msg.detail}</div>
                   </div>
                 ))}
               </div>
@@ -468,14 +468,14 @@ export default function TripForm({
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-6 border-t border-slate-200 mt-6 flex flex-col gap-3">
+        <div className="pt-6 border-t border-[var(--color-saggin-border)] mt-6 flex flex-col gap-3">
           <button
             type="submit"
             className={cn(
               "w-full py-3 px-4 rounded-xl font-semibold flex justify-center items-center gap-2 transition-colors ",
               safetyCheck?.status === 'DANGER' 
-                ? "bg-rose-900 hover:bg-rose-950 text-white" 
-                : "bg-rose-900 hover:bg-rose-950 text-white"
+                ? "bg-[var(--color-brand-red)] hover:bg-[#b91c1c] text-white" 
+                : "bg-[var(--color-brand-red)] hover:bg-[#b91c1c] text-white"
             )}
           >
             <Save className="h-5 w-5" />
@@ -484,7 +484,7 @@ export default function TripForm({
           <button
             type="button"
             onClick={onCancel}
-            className="w-full py-3 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-50 flex justify-center items-center gap-2 transition-colors"
+            className="w-full py-3 px-4 rounded-xl font-medium text-[var(--color-saggin-text-secondary)] hover:bg-[var(--color-saggin-bg)] flex justify-center items-center gap-2 transition-colors"
           >
             <X className="h-5 w-5" />
             Annulla

@@ -32,7 +32,7 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
   ];
 
   return (
-    <div className="flex h-screen bg-white text-slate-900 overflow-hidden font-sans">
+    <div className="flex h-screen bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] overflow-hidden font-sans">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -44,17 +44,17 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
       {/* Sidebar */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 text-slate-700 transition-transform duration-300 ease-in-out md:static md:translate-x-0 flex flex-col shadow-sm",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-[var(--color-saggin-surface)] border-r border-[var(--color-saggin-border)] text-[var(--color-saggin-text-secondary)] transition-transform duration-300 ease-in-out md:static md:translate-x-0 flex flex-col ",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-20 items-center px-6 border-b border-slate-200 shrink-0 gap-3">
-          <div className="bg-white p-1 rounded-lg shrink-0">
+        <div className="flex h-20 items-center px-6 border-b border-[var(--color-saggin-border)] shrink-0 gap-3">
+          <div className="bg-[var(--color-saggin-surface)] p-1 rounded-lg shrink-0">
             <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
           </div>
-          <span className="text-xl font-semibold tracking-tight text-slate-900">Saggin Planning</span>
+          <span className="text-xl font-semibold tracking-tight text-[var(--color-saggin-text-primary)]">Saggin Planning</span>
           <button 
-            className="ml-auto md:hidden text-slate-500 hover:text-slate-900"
+            className="ml-auto md:hidden text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)]"
             onClick={() => setSidebarOpen(false)}
           >
             <X className="h-5 w-5" />
@@ -69,10 +69,10 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
               return (
                 <li key={item.name}>
                   {item.disabled ? (
-                    <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-slate-500 cursor-not-allowed">
+                    <div className="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-[var(--color-saggin-text-secondary)] cursor-not-allowed">
                       <item.icon className="h-5 w-5 mr-3 shrink-0" />
                       {item.name}
-                      <span className="ml-auto text-[10px] uppercase tracking-wider bg-slate-50/50 text-slate-500 px-2 py-1 rounded-lg">
+                      <span className="ml-auto text-[10px] uppercase tracking-wider bg-[var(--color-saggin-bg)]/50 text-[var(--color-saggin-text-secondary)] px-2 py-1 rounded-lg">
                         Presto
                       </span>
                     </div>
@@ -82,17 +82,17 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
                       className={cn(
                         "flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative",
                         isActive
-                          ? "bg-slate-50/80 text-slate-900 "
-                          : "text-slate-500 hover:bg-slate-50/40 hover:text-slate-900"
+                          ? "bg-[var(--color-saggin-bg)]/80 text-[var(--color-saggin-text-primary)] "
+                          : "text-[var(--color-saggin-text-secondary)] hover:bg-[var(--color-saggin-bg)]/40 hover:text-[var(--color-saggin-text-primary)]"
                       )}
                       onClick={() => setSidebarOpen(false)}
                     >
                       {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-rose-900 rounded-r-full shadow-[0_0_10px_#dc2626]" />
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[var(--color-brand-red)] rounded-r-full shadow-[0_0_10px_#dc2626]" />
                       )}
                       <item.icon className={cn(
                         "h-5 w-5 mr-3 shrink-0 transition-colors",
-                        isActive ? "text-rose-900" : "text-slate-500 group-hover:text-slate-700"
+                        isActive ? "text-[var(--color-brand-red)]" : "text-[var(--color-saggin-text-secondary)] group-hover:text-[var(--color-saggin-text-secondary)]"
                       )} />
                       {item.name}
                     </Link>
@@ -103,41 +103,41 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-slate-200 shrink-0 bg-white">
-          <div className="flex items-center gap-3 px-3 py-3 mb-1 rounded-xl bg-slate-50 border border-slate-100">
-            <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-900 font-semibold shrink-0 shadow-sm">
+        <div className="p-4 border-t border-[var(--color-saggin-border)] shrink-0 bg-[var(--color-saggin-surface)]">
+          <div className="flex items-center gap-3 px-3 py-3 mb-1 rounded-xl bg-[var(--color-saggin-bg)] border border-slate-100">
+            <div className="w-9 h-9 rounded-full bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] flex items-center justify-center text-[var(--color-saggin-text-primary)] font-semibold shrink-0 ">
               {session?.user?.name?.charAt(0) || 'U'}
             </div>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-semibold text-slate-900 truncate">
+              <span className="text-sm font-semibold text-[var(--color-saggin-text-primary)] truncate">
                 {session?.user?.name || 'Utente Ufficio'}
               </span>
-              <p className="text-xs text-slate-500 font-medium">Ufficio</p>
+              <p className="text-xs text-[var(--color-saggin-text-secondary)] font-medium">Ufficio</p>
             </div>
           </div>
           <button 
             onClick={() => signOut({ callbackUrl: "/" })} 
-            className="flex items-center justify-center w-full px-3 py-2.5 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors group"
+            className="flex items-center justify-center w-full px-3 py-2.5 text-sm font-medium text-[var(--color-saggin-text-secondary)] rounded-lg hover:bg-[var(--color-saggin-surface)] hover:text-[var(--color-saggin-text-primary)] transition-colors group"
           >
-            <LogOut strokeWidth={1.5} className="h-4 w-4 mr-3 text-slate-400 group-hover:text-slate-600 transition-colors" />
+            <LogOut strokeWidth={1.5} className="h-4 w-4 mr-3 text-[var(--color-saggin-text-secondary)] group-hover:text-[var(--color-saggin-text-secondary)] transition-colors" />
             Esci
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-white">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[var(--color-saggin-surface)]">
         {/* Mobile Header */}
-        <header className="h-16 flex items-center justify-between px-4 bg-white border-b border-slate-200 md:hidden shrink-0">
+        <header className="h-16 flex items-center justify-between px-4 bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] md:hidden shrink-0">
           <div className="flex items-center">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="text-slate-500 hover:text-slate-900 p-1 -ml-1 rounded-lg hover:bg-slate-50"
+              className="text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] p-1 -ml-1 rounded-lg hover:bg-[var(--color-saggin-bg)]"
             >
               <Menu strokeWidth={1.5} className="h-6 w-6" />
             </button>
-            <span className="ml-3 font-semibold text-slate-900 flex items-center gap-2">
-              <div className="bg-white p-1 rounded-lg shrink-0">
+            <span className="ml-3 font-semibold text-[var(--color-saggin-text-primary)] flex items-center gap-2">
+              <div className="bg-[var(--color-saggin-surface)] p-1 rounded-lg shrink-0">
                 <img src="/logo.png" alt="Logo" className="w-5 h-5 object-contain" />
               </div>
               Saggin Planning
@@ -147,7 +147,7 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-5 md:p-6 md:p-6 lg:p-8 max-w-[1600px] mx-auto h-full text-slate-900">
+          <div className="p-5 md:p-6 md:p-6 lg:p-8 max-w-[1600px] mx-auto h-full text-[var(--color-saggin-text-primary)]">
             {children}
           </div>
         </main>

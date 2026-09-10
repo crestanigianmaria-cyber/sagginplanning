@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, { params }: any) {
     });
 
     if (lat && lng) {
-      await prisma.gpsTrackPoint.create({ data: { tripId: id, driverId: trip.driverId, latitude: lat, longitude: lng } });
+      await prisma.gpsTrackPoint.create({ data: { tripId: id, driverId: trip.driverId || 'unknown', latitude: lat, longitude: lng } });
     }
 
     await prisma.tripAuditLog.create({
