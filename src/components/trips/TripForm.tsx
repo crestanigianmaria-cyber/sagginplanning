@@ -88,11 +88,28 @@ export default function TripForm({
     if (!query || query.length < 3) { setSuggestions([]); return; }
     setIsSearchingAddress(true);
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=it&limit=5`, {
-        headers: { 'Accept-Language': 'it-IT' }
-      });
-      const data = await res.json();
-      setSuggestions(data);
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+      if (!token) {
+        console.warn('Mapbox token non configurato, uso Nominatim come fallback');
+        // Fallback a Nominatim se non c'è il token Mapbox
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=it&limit=5`);
+        const data = await res.json();
+        setSuggestions(data.map((d: any) => ({
+          display_name: d.display_name,
+          lat: parseFloat(d.lat),
+          lon: parseFloat(d.lon)
+        })));
+      } else {
+        const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(query)}&access_token=${token}&country=it&limit=5&types=address,poi,place`);
+        const data = await res.json();
+        if (data.features) {
+          setSuggestions(data.features.map((f: any) => ({
+            display_name: f.properties.full_address || f.properties.name || f.properties.place_formatted,
+            lat: f.geometry.coordinates[1],
+            lon: f.geometry.coordinates[0]
+          })));
+        }
+      }
     } catch (e) {
       console.error('Errore geocoding:', e);
     } finally {
@@ -101,9 +118,10 @@ export default function TripForm({
   };
 
   const selectAddress = async (suggestion: any) => {
-    const lat = parseFloat(suggestion.lat);
-    const lon = parseFloat(suggestion.lon);
-    const addressName = suggestion.display_name.split(',').slice(0, 3).join(', '); // Pulisce un po' l'indirizzo
+    const lat = suggestion.lat;
+    const lon = suggestion.lon;
+    // Mapbox restituisce indirizzi più puliti di OSM, possiamo tenere il nome per intero o tagliare meno aggressivamente
+    const addressName = suggestion.display_name; 
 
     setFormData(prev => ({ ...prev, address: addressName, latitude: lat, longitude: lon }));
     setSuggestions([]);
@@ -179,51 +197,51 @@ export default function TripForm({
           <h2 className="text-xl font-bold text-[#dc2626] mb-1">
             {trip ? 'Modifica Viaggio' : 'Nuovo Viaggio'}
           </h2>
-          <p className="text-sm text-zinc-400">Compila i dettagli per pianificare il viaggio.</p>
+          <p className="text-sm text-gray-500">Compila i dettagli per pianificare il viaggio.</p>
         </div>
 
         {/* Sezione 1: Assegnazione */}
-        <section className="bg-[#111113] p-4 rounded-xl border border-zinc-800">
+        <section className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center gap-2 mb-4 text-[#dc2626]">
             <User className="h-5 w-5" />
             <h3 className="font-semibold">Assegnazione</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">Autista *</label>
-              <select name="driverId" value={formData.driverId} onChange={handleChange} required className="w-full rounded-md border-zinc-700 bg-[#09090b] text-white shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Autista *</label>
+              <select name="driverId" value={formData.driverId} onChange={handleChange} required className="w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border">
   <option value="">Seleziona...</option>
   {drivers?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
 </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">Data *</label>
-              <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full rounded-md border-zinc-700 bg-[#09090b] text-white [color-scheme:dark] shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Data *</label>
+              <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full rounded-md border-gray-300 bg-white text-gray-900  shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">Orario previsto *</label>
-              <input type="time" name="time" value={formData.time} onChange={handleChange} required className="w-full rounded-md border-zinc-700 bg-[#09090b] text-white [color-scheme:dark] shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Orario previsto *</label>
+              <input type="time" name="time" value={formData.time} onChange={handleChange} required className="w-full rounded-md border-gray-300 bg-white text-gray-900  shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
             </div>
           </div>
         </section>
 
         {/* Sezione 2: Mezzo */}
-        <section className="bg-[#111113] p-4 rounded-xl border border-zinc-800">
+        <section className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center gap-2 mb-4 text-[#dc2626]">
             <Truck className="h-5 w-5" />
             <h3 className="font-semibold">Mezzo e Allestimento</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">Veicolo Trattore *</label>
-              <select name="vehicleId" value={formData.vehicleId} onChange={handleChange} required className="w-full rounded-md border-zinc-700 bg-[#09090b] text-white shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Veicolo Trattore *</label>
+              <select name="vehicleId" value={formData.vehicleId} onChange={handleChange} required className="w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border">
   <option value="">Seleziona...</option>
   {vehicles?.filter((v:any) => v.type !== 'RIMORCHIO').map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
 </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">Rimorchio (Opzionale)</label>
-              <select name="trailerId" value={formData.trailerId} onChange={handleChange} className="w-full rounded-md border-zinc-700 bg-[#09090b] text-white shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Rimorchio (Opzionale)</label>
+              <select name="trailerId" value={formData.trailerId} onChange={handleChange} className="w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border">
   <option value="">Nessuno</option>
   {vehicles?.filter((v:any) => v.type === 'RIMORCHIO').map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
 </select>
@@ -232,55 +250,55 @@ export default function TripForm({
         </section>
 
         {/* Sezione 3: Carico */}
-        <section className="bg-[#111113] p-4 rounded-xl border border-zinc-800">
+        <section className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center gap-2 mb-4 text-[#dc2626]">
             <Package className="h-5 w-5" />
             <h3 className="font-semibold">Dettagli Carico</h3>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">Descrizione Merce *</label>
-              <input type="text" name="cargoDesc" value={formData.cargoDesc} onChange={handleChange} required className="w-full rounded-md border-zinc-700 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Descrizione Merce *</label>
+              <input type="text" name="cargoDesc" value={formData.cargoDesc} onChange={handleChange} required className="w-full rounded-md border-gray-300 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-zinc-300 mb-1">Peso stimato (kg)</label>
-                <input type="number" name="weightKg" value={formData.weightKg} onChange={handleChange} className="w-full rounded-md border-zinc-700 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-gray-700 mb-1">Peso stimato (kg)</label>
+                <input type="number" name="weightKg" value={formData.weightKg} onChange={handleChange} className="w-full rounded-md border-gray-300 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">Lung. (m)</label>
-                <input type="number" step="0.1" name="lengthM" value={formData.lengthM} onChange={handleChange} className="w-full rounded-md border-zinc-700 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-gray-700 mb-1">Lung. (m)</label>
+                <input type="number" step="0.1" name="lengthM" value={formData.lengthM} onChange={handleChange} className="w-full rounded-md border-gray-300 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">Larg. (m)</label>
-                <input type="number" step="0.1" name="widthM" value={formData.widthM} onChange={handleChange} className="w-full rounded-md border-zinc-700 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-gray-700 mb-1">Larg. (m)</label>
+                <input type="number" step="0.1" name="widthM" value={formData.widthM} onChange={handleChange} className="w-full rounded-md border-gray-300 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">Alt. (m)</label>
-                <input type="number" step="0.1" name="heightM" value={formData.heightM} onChange={handleChange} className="w-full rounded-md border-zinc-700 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-gray-700 mb-1">Alt. (m)</label>
+                <input type="number" step="0.1" name="heightM" value={formData.heightM} onChange={handleChange} className="w-full rounded-md border-gray-300 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
             </div>
           </div>
         </section>
 
         {/* Sezione 4: Gru */}
-        <section className="bg-[#111113] p-4 rounded-xl border border-zinc-800">
+        <section className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center gap-2 mb-4 text-[#dc2626]">
             <Anchor className="h-5 w-5" />
             <h3 className="font-semibold">Operazioni con Gru</h3>
           </div>
           <div className="flex items-center mb-4">
-            <input type="checkbox" id="needsCrane" name="needsCrane" checked={formData.needsCrane} onChange={handleChange} className="h-4 w-4 text-[#dc2626] focus:ring-[#dc2626] border-zinc-700 rounded" />
-            <label htmlFor="needsCrane" className="ml-2 block text-sm text-white font-medium">
+            <input type="checkbox" id="needsCrane" name="needsCrane" checked={formData.needsCrane} onChange={handleChange} className="h-4 w-4 text-[#dc2626] focus:ring-[#dc2626] border-gray-300 rounded" />
+            <label htmlFor="needsCrane" className="ml-2 block text-sm text-gray-900 font-medium">
               Richiede l'utilizzo della gru
             </label>
           </div>
           {formData.needsCrane && (
-            <div className="mt-4 p-4 bg-[#09090b] border border-zinc-700 rounded-lg">
-              <label className="block text-xs font-medium text-zinc-300 mb-2">Raggio di lavoro stimato (Metri): {formData.craneRadiusM}m</label>
-              <input type="range" name="craneRadiusM" min="1" max="30" value={formData.craneRadiusM} onChange={handleChange} className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#dc2626]" />
-              <div className="flex justify-between text-xs text-zinc-400 mt-1">
+            <div className="mt-4 p-4 bg-white border border-gray-300 rounded-lg">
+              <label className="block text-xs font-medium text-gray-700 mb-2">Raggio di lavoro stimato (Metri): {formData.craneRadiusM}m</label>
+              <input type="range" name="craneRadiusM" min="1" max="30" value={formData.craneRadiusM} onChange={handleChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#dc2626]" />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>1m</span>
                 <span>15m</span>
                 <span>30m</span>
@@ -290,7 +308,7 @@ export default function TripForm({
         </section>
 
         {/* Sezione 5: Destinazione e Mappe */}
-        <section className="bg-[#111113] p-4 rounded-xl border border-zinc-800 relative">
+        <section className="bg-white p-4 rounded-xl border border-gray-200 relative">
           <div className="flex items-center gap-2 mb-4 text-[#dc2626]">
             <MapPin className="h-5 w-5" />
             <h3 className="font-semibold">Destinazione e Percorso</h3>
@@ -298,7 +316,7 @@ export default function TripForm({
           
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">Indirizzo di Consegna (Ricerca Automatica) *</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Indirizzo di Consegna (Ricerca Automatica) *</label>
               <div className="relative">
                 <input 
                   type="text" 
@@ -310,7 +328,7 @@ export default function TripForm({
                   }} 
                   placeholder="Inizia a digitare l'indirizzo (es. Via Roma 1, Padova)..."
                   required 
-                  className="w-full rounded-md border-zinc-700 bg-[#09090b] text-white shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border pr-10" 
+                  className="w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border pr-10" 
                   autoComplete="off"
                 />
                 {isSearchingAddress && (
@@ -319,12 +337,12 @@ export default function TripForm({
                   </div>
                 )}
                 {suggestions.length > 0 && (
-                  <ul className="absolute z-50 w-full mt-1 bg-[#111113] border border-zinc-700 rounded-md shadow-2xl max-h-60 overflow-auto">
+                  <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-2xl max-h-60 overflow-auto">
                     {suggestions.map((s, i) => (
                       <li 
                         key={i} 
                         onClick={() => selectAddress(s)}
-                        className="px-4 py-3 hover:bg-zinc-800 cursor-pointer text-sm text-zinc-200 border-b border-zinc-800 last:border-0 transition-colors"
+                        className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm text-zinc-200 border-b border-gray-200 last:border-0 transition-colors"
                       >
                         {s.display_name}
                       </li>
@@ -335,20 +353,20 @@ export default function TripForm({
             </div>
 
             <div className="flex gap-4">
-              <div className="flex-1 bg-[#09090b] border border-zinc-800 rounded-lg p-3 flex items-center gap-3">
-                <div className="bg-zinc-800 p-2 rounded-full"><MapPin size={16} className="text-zinc-400" /></div>
+              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3">
+                <div className="bg-gray-100 p-2 rounded-full"><MapPin size={16} className="text-gray-500" /></div>
                 <div>
-                  <div className="text-[10px] text-zinc-500 font-bold uppercase">Distanza Stimata</div>
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-[10px] text-gray-500 font-bold uppercase">Distanza Stimata</div>
+                  <div className="text-sm font-medium text-gray-900">
                     {(formData as any).estimatedDistanceKm ? `${(formData as any).estimatedDistanceKm} km` : '--'}
                   </div>
                 </div>
               </div>
-              <div className="flex-1 bg-[#09090b] border border-zinc-800 rounded-lg p-3 flex items-center gap-3">
-                <div className="bg-zinc-800 p-2 rounded-full"><FileText size={16} className="text-zinc-400" /></div>
+              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3">
+                <div className="bg-gray-100 p-2 rounded-full"><FileText size={16} className="text-gray-500" /></div>
                 <div>
-                  <div className="text-[10px] text-zinc-500 font-bold uppercase">Tempo Previsto</div>
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-[10px] text-gray-500 font-bold uppercase">Tempo Previsto</div>
+                  <div className="text-sm font-medium text-gray-900">
                     {(formData as any).estimatedDurationMins ? `${(formData as any).estimatedDurationMins} min` : '--'}
                   </div>
                 </div>
@@ -357,29 +375,29 @@ export default function TripForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">Contatto in cantiere</label>
-                <input type="text" name="contactName" value={formData.contactName} onChange={handleChange} className="w-full rounded-md border-zinc-700 bg-[#09090b] text-white shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-gray-700 mb-1">Contatto in cantiere</label>
+                <input type="text" name="contactName" value={formData.contactName} onChange={handleChange} className="w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">Telefono</label>
-                <input type="text" name="contactPhone" value={formData.contactPhone} onChange={handleChange} className="w-full rounded-md border-zinc-700 bg-[#09090b] text-white shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-medium text-gray-700 mb-1">Telefono</label>
+                <input type="text" name="contactPhone" value={formData.contactPhone} onChange={handleChange} className="w-full rounded-md border-gray-300 bg-white text-gray-900 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
               </div>
             </div>
           </div>
         </section>
 
         {/* Sezione 6: Note */}
-        <section className="bg-[#111113] p-4 rounded-xl border border-zinc-800">
+        <section className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center gap-2 mb-4 text-[#dc2626]">
             <FileText className="h-5 w-5" />
             <h3 className="font-semibold">Note Aggiuntive</h3>
           </div>
-          <textarea name="notes" rows={3} value={formData.notes} onChange={handleChange} className="w-full rounded-md border-zinc-700 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border"></textarea>
+          <textarea name="notes" rows={3} value={formData.notes} onChange={handleChange} className="w-full rounded-md border-gray-300 shadow-sm focus:border-[#dc2626] focus:ring-[#dc2626] text-sm py-2 px-3 border"></textarea>
         </section>
       </div>
 
       {/* Safety Check Sidebar */}
-      <div className="w-full lg:w-80 bg-zinc-800/50 border-t lg:border-t-0 lg:border-l border-zinc-700 flex flex-col p-6 shrink-0">
+      <div className="w-full lg:w-80 bg-gray-100/50 border-t lg:border-t-0 lg:border-l border-gray-300 flex flex-col p-6 shrink-0">
         <h3 className="text-lg font-bold text-[#dc2626] flex items-center gap-2 mb-6">
           <ShieldCheck className="h-5 w-5" />
           Controllo Sicurezza
@@ -387,11 +405,11 @@ export default function TripForm({
 
         <div className="flex-1 space-y-4">
           {!formData.vehicleId || !formData.weightKg ? (
-            <div className="text-sm text-zinc-400 text-center py-8">
+            <div className="text-sm text-gray-500 text-center py-8">
               Inserisci mezzo e peso per abilitare i controlli di sicurezza in tempo reale.
             </div>
           ) : isChecking ? (
-            <div className="text-sm text-zinc-400 text-center py-8 animate-pulse">
+            <div className="text-sm text-gray-500 text-center py-8 animate-pulse">
               Analisi in corso...
             </div>
           ) : safetyCheck ? (
@@ -399,9 +417,9 @@ export default function TripForm({
               {/* Overall Status */}
               <div className={cn(
                 "p-4 rounded-xl border-2 flex items-center gap-3",
-                safetyCheck.status === 'OK' ? "bg-green-950/50 border-green-800/50 text-green-400" :
-                safetyCheck.status === 'WARNING' ? "bg-amber-950/50 border-amber-800/50 text-amber-400" :
-                "bg-red-950/50 border-red-800/50 text-red-400"
+                safetyCheck.status === 'OK' ? "bg-green-50 border-green-200 text-green-700" :
+                safetyCheck.status === 'WARNING' ? "bg-amber-50 border-amber-200 text-amber-600" :
+                "bg-red-50 border-red-200 text-red-700"
               )}>
                 {safetyCheck.status === 'OK' ? <ShieldCheck className="h-8 w-8" /> :
                  safetyCheck.status === 'WARNING' ? <AlertTriangle className="h-8 w-8" /> :
@@ -417,21 +435,21 @@ export default function TripForm({
 
               {/* Individual Checks */}
               <div className="space-y-3 mt-6">
-                <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Dettaglio Controlli</h4>
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Dettaglio Controlli</h4>
                 {safetyCheck.messages.map((msg: any, idx: number) => (
                   <div key={idx} className={cn(
                     "p-3 rounded-lg border text-sm",
-                    msg.type === 'success' ? "border-green-800/40 bg-green-950/30" :
-                    msg.type === 'warning' ? "border-amber-700/40 bg-amber-950/30" :
-                    "border-red-700/40 bg-red-950/30"
+                    msg.type === 'success' ? "border-green-200 bg-green-50" :
+                    msg.type === 'warning' ? "border-amber-200 bg-amber-50" :
+                    "border-red-200 bg-red-50"
                   )}>
                     <div className={cn(
                       "font-semibold mb-1",
-                      msg.type === 'success' ? "text-green-400" :
-                      msg.type === 'warning' ? "text-amber-400" :
-                      "text-red-400"
+                      msg.type === 'success' ? "text-green-700" :
+                      msg.type === 'warning' ? "text-amber-600" :
+                      "text-red-700"
                     )}>{msg.title}</div>
-                    <div className="text-zinc-400 text-xs">{msg.detail}</div>
+                    <div className="text-gray-500 text-xs">{msg.detail}</div>
                   </div>
                 ))}
               </div>
@@ -440,14 +458,14 @@ export default function TripForm({
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-6 border-t border-zinc-700 mt-6 flex flex-col gap-3">
+        <div className="pt-6 border-t border-gray-300 mt-6 flex flex-col gap-3">
           <button
             type="submit"
             className={cn(
               "w-full py-3 px-4 rounded-xl font-bold flex justify-center items-center gap-2 transition-colors shadow-sm",
               safetyCheck?.status === 'DANGER' 
-                ? "bg-red-600 hover:bg-red-700 text-white" 
-                : "bg-[#dc2626] hover:bg-[#b91c1c] text-white"
+                ? "bg-red-600 hover:bg-red-700 text-gray-900" 
+                : "bg-[#dc2626] hover:bg-[#b91c1c] text-gray-900"
             )}
           >
             <Save className="h-5 w-5" />
@@ -456,7 +474,7 @@ export default function TripForm({
           <button
             type="button"
             onClick={onCancel}
-            className="w-full py-3 px-4 rounded-xl font-medium text-zinc-400 hover:bg-zinc-800 flex justify-center items-center gap-2 transition-colors"
+            className="w-full py-3 px-4 rounded-xl font-medium text-gray-500 hover:bg-gray-100 flex justify-center items-center gap-2 transition-colors"
           >
             <X className="h-5 w-5" />
             Annulla

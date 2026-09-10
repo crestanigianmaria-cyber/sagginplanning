@@ -17,10 +17,10 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
   const formattedDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1)
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col">
-      <header className="bg-zinc-900 border-b border-zinc-800 text-white p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
+      <header className="bg-white border-b border-gray-200 text-gray-900 p-4 shadow-md sticky top-0 z-10 flex justify-between items-center">
         <div>
-          <div className="text-sm text-zinc-400">{formattedDate}</div>
+          <div className="text-sm text-gray-500">{formattedDate}</div>
           <div className="text-xl font-medium">Ciao, {session?.user?.name || 'Autista'}</div>
         </div>
         <div className="flex items-center gap-3">
@@ -29,7 +29,7 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
           </div>
           <button 
             onClick={() => signOut({ callbackUrl: '/' })}
-            className="p-2 bg-[#dc2626]/10 text-[#dc2626] rounded-lg border border-[#dc2626]/20 hover:bg-[#dc2626] hover:text-white transition-colors"
+            className="p-2 bg-[#dc2626]/10 text-[#dc2626] rounded-lg border border-[#dc2626]/20 hover:bg-[#dc2626] hover:text-gray-900 transition-colors"
             title="Esci"
           >
             <LogOut size={20} />
@@ -37,20 +37,20 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
         </div>
       </header>
       
-      <main className="flex-1 pb-[80px] overflow-y-auto bg-zinc-950">
+      <main className="flex-1 pb-[80px] overflow-y-auto bg-gray-50">
         {children}
       </main>
 
-      <nav className="fixed bottom-0 w-full h-[65px] bg-zinc-900 border-t border-zinc-800 flex justify-around items-center shadow-[0_-5px_20px_rgba(0,0,0,0.5)] z-10">
-        <Link href="/my-trips" className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", pathname?.includes('/my-trips') ? "text-[#dc2626]" : "text-zinc-500 hover:text-zinc-300")}>
+      <nav className="fixed bottom-0 w-full h-[65px] bg-white border-t border-gray-200 flex justify-around items-center shadow-[0_-5px_20px_rgba(0,0,0,0.5)] z-10">
+        <Link href="/my-trips" className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", pathname?.includes('/my-trips') ? "text-[#dc2626]" : "text-gray-500 hover:text-gray-700")}>
           <Truck size={24} />
           <span className="text-xs mt-1 font-medium">Viaggi</span>
         </Link>
-        <Link href="/hours" className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", pathname === '/hours' ? "text-[#dc2626]" : "text-zinc-500 hover:text-zinc-300")}>
+        <Link href="/hours" className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", pathname === '/hours' ? "text-[#dc2626]" : "text-gray-500 hover:text-gray-700")}>
           <Clock size={24} />
           <span className="text-xs mt-1 font-medium">Ore</span>
         </Link>
-        <Link href="/profile" className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", pathname === '/profile' ? "text-[#dc2626]" : "text-zinc-500 hover:text-zinc-300")}>
+        <Link href="/profile" className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", pathname === '/profile' ? "text-[#dc2626]" : "text-gray-500 hover:text-gray-700")}>
           <User size={24} />
           <span className="text-xs mt-1 font-medium">Profilo</span>
         </Link>

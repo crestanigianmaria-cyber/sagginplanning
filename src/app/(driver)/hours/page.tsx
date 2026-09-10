@@ -56,24 +56,24 @@ export default function HoursPage() {
 
   return (
     <div className="p-4 space-y-5">
-      <h1 className="text-2xl font-black text-white">Riepilogo Ore</h1>
+      <h1 className="text-2xl font-black text-gray-900">Riepilogo Ore</h1>
 
-      <section className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
-        <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4">Oggi</h2>
-        <div className="text-5xl font-black text-white mb-1">
-          {todayHours} <span className="text-2xl text-zinc-500 font-medium">/ 8h</span>
+      <section className="bg-white rounded-2xl p-6 border border-gray-200">
+        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Oggi</h2>
+        <div className="text-5xl font-black text-gray-900 mb-1">
+          {todayHours} <span className="text-2xl text-gray-500 font-medium">/ 8h</span>
         </div>
-        <div className="w-full bg-zinc-800 rounded-full h-3 mt-4 mb-6 overflow-hidden">
+        <div className="w-full bg-gray-100 rounded-full h-3 mt-4 mb-6 overflow-hidden">
           <div className="bg-[#dc2626] h-3 rounded-full transition-all" style={{ width: todayPct + '%' }} />
         </div>
-        <h3 className="font-bold text-zinc-500 text-xs uppercase tracking-wider mb-3">Viaggi completati oggi:</h3>
+        <h3 className="font-bold text-gray-500 text-xs uppercase tracking-wider mb-3">Viaggi completati oggi:</h3>
         {todayTrips.length === 0 ? (
           <p className="text-zinc-600 text-sm">Nessun viaggio completato oggi</p>
         ) : (
           <div className="space-y-2">
             {todayTrips.map((t: any) => (
-              <div key={t.id} className="flex justify-between items-center bg-zinc-950 p-3 rounded-xl border border-zinc-800">
-                <span className="font-medium text-zinc-300 truncate mr-4 text-sm">{t.cargoDescription}</span>
+              <div key={t.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-200">
+                <span className="font-medium text-gray-700 truncate mr-4 text-sm">{t.cargoDescription}</span>
                 <span className="font-bold text-[#dc2626] whitespace-nowrap text-sm">
                   {t.workedMinutes ? Math.floor(t.workedMinutes / 60) + 'h ' + (t.workedMinutes % 60) + 'm' : 'N/D'}
                 </span>
@@ -83,10 +83,10 @@ export default function HoursPage() {
         )}
       </section>
 
-      <section className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
-        <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4">Questa Settimana</h2>
-        <div className="text-3xl font-black text-white mb-6">
-          {weekTotal} <span className="text-lg text-zinc-500 font-medium">ore totali</span>
+      <section className="bg-white rounded-2xl p-6 border border-gray-200">
+        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Questa Settimana</h2>
+        <div className="text-3xl font-black text-gray-900 mb-6">
+          {weekTotal} <span className="text-lg text-gray-500 font-medium">ore totali</span>
         </div>
         <div className="flex items-end justify-between h-28 gap-1.5">
           {weekData.map((d, i) => {
@@ -94,28 +94,28 @@ export default function HoursPage() {
             const isToday = i === todayIdx
             return (
               <div key={i} className="flex flex-col items-center gap-1 flex-1">
-                {d.hours > 0 && <div className="text-[10px] font-bold text-zinc-500">{d.hours}</div>}
-                <div className="w-full bg-zinc-800 rounded-t-md flex-1 relative overflow-hidden">
+                {d.hours > 0 && <div className="text-[10px] font-bold text-gray-500">{d.hours}</div>}
+                <div className="w-full bg-gray-100 rounded-t-md flex-1 relative overflow-hidden">
                   <div
                     className={'absolute bottom-0 w-full rounded-t-md ' + (isToday ? 'bg-[#dc2626]' : 'bg-zinc-600')}
                     style={{ height: pct + '%' }}
                   />
                 </div>
-                <div className={'text-xs font-bold ' + (isToday ? 'text-[#dc2626]' : 'text-zinc-500')}>{d.day}</div>
+                <div className={'text-xs font-bold ' + (isToday ? 'text-[#dc2626]' : 'text-gray-500')}>{d.day}</div>
               </div>
             )
           })}
         </div>
       </section>
 
-      <section className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 flex items-center gap-4">
+      <section className="bg-white rounded-2xl p-5 border border-gray-200 flex items-center gap-4">
         <div className="p-3 bg-[#dc2626]/10 rounded-xl border border-[#dc2626]/20">
           <Clock size={28} className="text-[#dc2626]" />
         </div>
         <div>
-          <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Totale ultimi 30gg</div>
-          <div className="text-2xl font-black text-white">{totalHours} ore</div>
-          <div className="text-xs text-zinc-500">{completed.length} viaggi completati</div>
+          <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">Totale ultimi 30gg</div>
+          <div className="text-2xl font-black text-gray-900">{totalHours} ore</div>
+          <div className="text-xs text-gray-500">{completed.length} viaggi completati</div>
         </div>
       </section>
     </div>

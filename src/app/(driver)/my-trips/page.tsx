@@ -69,15 +69,15 @@ export default function MyTripsPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="bg-zinc-900 rounded-xl p-4 shadow-sm flex justify-between items-center border border-zinc-800">
-        <span className="font-bold text-white text-xl">Oggi: {total} viaggi</span>
+      <div className="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center border border-gray-200">
+        <span className="font-bold text-gray-900 text-xl">Oggi: {total} viaggi</span>
         <span className="bg-[#dc2626]/20 text-[#dc2626] px-3 py-1 rounded-full font-bold">
           {completed} / {total}
         </span>
       </div>
 
       {trips.length === 0 ? (
-        <div className="flex flex-col items-center justify-center mt-24 text-zinc-500 space-y-6">
+        <div className="flex flex-col items-center justify-center mt-24 text-gray-500 space-y-6">
           <Calendar size={80} className="text-zinc-700" />
           <p className="text-xl font-medium text-center">Nessun viaggio<br/>programmato per oggi</p>
         </div>
@@ -85,23 +85,23 @@ export default function MyTripsPage() {
         <div className="space-y-4">
           {trips.map(trip => (
             <Link key={trip.id} href={`/my-trips/${trip.id}`} className="block">
-              <div className={cn("bg-zinc-900 rounded-xl shadow-sm border-l-[6px] overflow-hidden p-4 relative active:scale-[0.98] transition-transform", getStatusColor(trip.status))}>
-                <div className="absolute top-4 right-4 text-xs font-bold px-2 py-1 bg-zinc-800 text-zinc-300 rounded">
+              <div className={cn("bg-white rounded-xl shadow-sm border-l-[6px] overflow-hidden p-4 relative active:scale-[0.98] transition-transform", getStatusColor(trip.status))}>
+                <div className="absolute top-4 right-4 text-xs font-bold px-2 py-1 bg-gray-100 text-gray-700 rounded">
                   {getStatusLabel(trip.status)}
                 </div>
                 
-                <div className="text-3xl font-extrabold text-white mb-2">{trip.scheduledTime}</div>
-                <div className="text-lg font-medium mb-3 pr-16 text-zinc-300">{trip.cargoDescription}</div>
+                <div className="text-3xl font-extrabold text-gray-900 mb-2">{trip.scheduledTime}</div>
+                <div className="text-lg font-medium mb-3 pr-16 text-gray-700">{trip.cargoDescription}</div>
                 
-                <div className="flex items-start gap-2 text-zinc-400 mb-3">
+                <div className="flex items-start gap-2 text-gray-500 mb-3">
                   <MapPin size={20} className="mt-0.5 flex-shrink-0 text-[#dc2626]" />
                   <span className="text-base line-clamp-2 leading-tight">{trip.address}</span>
                 </div>
                 
-                <div className="flex justify-between items-center mt-4 pt-4 border-t border-zinc-800">
-                  <span className="text-sm font-medium text-zinc-500">{trip.vehicleName}</span>
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                  <span className="text-sm font-medium text-gray-500">{trip.vehicleName}</span>
                   {trip.needsCrane && (
-                    <span className="bg-[#dc2626] text-white text-xs font-bold px-2 py-1 rounded-md">GRU</span>
+                    <span className="bg-[#dc2626] text-gray-900 text-xs font-bold px-2 py-1 rounded-md">GRU</span>
                   )}
                 </div>
               </div>
