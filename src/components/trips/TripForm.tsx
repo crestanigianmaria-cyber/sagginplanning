@@ -100,7 +100,7 @@ export default function TripForm({
           lon: parseFloat(d.lon)
         })));
       } else {
-        const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(query)}&access_token=${token}&country=it&limit=5&types=address,poi,place`);
+        const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(query)}&access_token=${token}&country=it&limit=5`);
         const data = await res.json();
         if (res.ok && data.features) {
           setSuggestions(data.features.map((f: any) => ({
