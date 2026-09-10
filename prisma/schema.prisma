@@ -1,0 +1,267 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum VehicleType {
+  MOTRICE_CON_GRU
+  MOTRICE_SENZA_GRU
+  RIMORCHIO
+  MOTOCARRO
+}
+
+enum VehicleStatus {
+  DISPONIBILE
+  MANUTENZIONE
+  FUORI_SERVIZIO
+}
+
+enum DriverRole {
+  AUTISTA
+  AUTISTA_UFFICIO
+}
+
+enum DriverStatus {
+  ATTIVO
+  INATTIVO
+}
+
+enum OfficeUserRole {
+  STANDARD
+  ADMIN
+}
+
+enum TripStatus {
+  DA_FARE
+  IN_CORSO
+  COMPLETATO
+  ANNULLATO
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+}
+
+enum UserType {
+  OFFICE
+  DRIVER
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model Vehicle {
+  id                     String                 @id @default(cuid())
+  name                   String
+  brand                  String
+  model                  String
+  licensePlate           String                 @unique
+  type                   VehicleType
+  maxExternalHeight      Float?
+  maxExternalLength      Float?
+  maxExternalWidth       Float?
+  bedHeightFromGround    Float?
+  internalBedLength      Float?
+  internalBedWidth       Float?
+  maxTransportableLength Float?
+  maxRearOverhang        Float?
+  maxTransportableHeight Float?
+  payloadCapacity        Int
+  tare                   Int
+  hasCrane               Boolean                @default(false)
+  craneModel             String?
+  craneMaxReach          Float?
+  craneSide              String?
+  tailgateLiftCapacity   Int?
+  towableLoad            Int?
+  maxCraneAndTrailerLoad Int?
+  notes                  String?
+  status                 VehicleStatus          @default(DISPONIBILE)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  configurations         VehicleConfiguration[]
+  craneCapacityCurves    CraneCapacityCurve[]
+  tripsAsVehicle         Trip[]                 @relation("TripVehicle")
+  tripsAsTrailer         Trip[]                 @relation("TripTrailer")
+  defaultDrivers         Driver[]
+}
+
+model VehicleConfiguration {
+  id                     String   @id @default(cuid())
+  vehicleId              String
+  name                   String
+  description            String?
+  maxExternalHeight      Float?
+  maxExternalLength      Float?
+  internalBedLength      Float?
+  internalBedWidth       Float?
+  maxTransportableLength Float?
+  maxTransportableHeight Float?
+  payloadCapacity        Int
+  tare                   Int
+  hasCrane               Boolean  @default(false)
+  isDefault              Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  vehicle                Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId])
+}
+
+model CraneCapacityCurve {
+  id               String               @id @default(cuid())
+  vehicleId        String
+  configName       String               @default("standard")
+  stabilizerConfig String?
+  description      String?
+  createdAt        DateTime             @default(now())
+
+  vehicle          Vehicle              @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  points           CraneCapacityPoint[]
+
+  @@unique([vehicleId, configName, stabilizerConfig])
+  @@index([vehicleId])
+}
+
+model CraneCapacityPoint {
+  id           String             @id @default(cuid())
+  curveId      String
+  radiusMeters Float
+  capacityKg   Int
+
+  curve        CraneCapacityCurve @relation(fields: [curveId], references: [id], onDelete: Cascade)
+
+  @@index([curveId, radiusMeters])
+}
+
+model Driver {
+  id               String          @id @default(cuid())
+  name             String
+  pin              String
+  role             DriverRole      @default(AUTISTA)
+  status           DriverStatus    @default(ATTIVO)
+  defaultVehicleId String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  defaultVehicle   Vehicle?        @relation(fields: [defaultVehicleId], references: [id], onDelete: SetNull)
+  trips            Trip[]
+  gpsTrackPoints   GpsTrackPoint[]
+
+  @@index([defaultVehicleId])
+}
+
+model OfficeUser {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  role         OfficeUserRole @default(STANDARD)
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  auditLogs    TripAuditLog[]
+}
+
+model Trip {
+  id                 String          @id @default(cuid())
+  date               DateTime
+  scheduledTime      String
+  driverId           String
+  vehicleId          String
+  trailerId          String?
+  vehicleConfigId    String?
+  cargoDescription   String
+  cargoWeight        Int?
+  cargoLength        Float?
+  cargoWidth         Float?
+  cargoHeight        Float?
+  palletCount        Int?
+  needsCrane         Boolean         @default(false)
+  craneWorkRadius    Float?
+  address            String
+  latitude           Float?
+  longitude          Float?
+  contactName        String?
+  contactPhone       String?
+  clientOrderNumber  String?
+  notes              String?
+  status             TripStatus      @default(DA_FARE)
+  actualStartTime    DateTime?
+  actualEndTime      DateTime?
+  startLatitude      Float?
+  startLongitude     Float?
+  endLatitude        Float?
+  endLongitude       Float?
+  workedMinutes      Int?
+  estimatedDurationMins Int?
+  estimatedDistanceKm   Float?
+  actualCraneHours      Float?
+  driverNotes           String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  createdById        String?
+  createdByType      UserType?
+
+  driver             Driver          @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  vehicle            Vehicle         @relation("TripVehicle", fields: [vehicleId], references: [id], onDelete: Restrict)
+  trailer            Vehicle?        @relation("TripTrailer", fields: [trailerId], references: [id], onDelete: SetNull)
+  auditLogs          TripAuditLog[]
+  gpsTrackPoints     GpsTrackPoint[]
+
+  @@index([date, driverId])
+  @@index([date, status])
+  @@index([driverId])
+  @@index([vehicleId])
+  @@index([trailerId])
+}
+
+model TripAuditLog {
+  id            String       @id @default(cuid())
+  tripId        String
+  officeUserId  String?
+  driverIdActor String?
+  userType      UserType
+  action        AuditAction
+  fieldName     String?
+  oldValue      String?
+  newValue      String?
+  timestamp     DateTime     @default(now())
+
+  trip          Trip         @relation(fields: [tripId], references: [id], onDelete: Restrict)
+  officeUser    OfficeUser?  @relation(fields: [officeUserId], references: [id], onDelete: SetNull)
+
+  @@index([tripId, timestamp])
+  @@index([officeUserId])
+}
+
+model GpsTrackPoint {
+  id        String   @id @default(cuid())
+  tripId    String
+  driverId  String
+  latitude  Float
+  longitude Float
+  accuracy  Float?
+  timestamp DateTime @default(now())
+
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, timestamp])
+  @@index([driverId, timestamp])
+}
