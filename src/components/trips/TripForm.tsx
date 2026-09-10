@@ -2,7 +2,7 @@
 import { useSession } from 'next-auth/react';
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, AlertTriangle, AlertOctagon, Save, X, Truck, Package, MapPin, User, FileText, Anchor } from 'lucide-react';
+import { Clock, ShieldCheck, AlertTriangle, AlertOctagon, Save, X, Truck, Package, MapPin, User, FileText, Anchor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function TripForm({ 
@@ -152,25 +152,53 @@ export default function TripForm({
     setFormData(prev => ({ ...prev, address: addressName, latitude: lat, longitude: lon }));
     setSuggestions([]);
 
-    // Calcola rotta con OSRM da Cadoneghe (HQ)
+    // Calcola rotta da Sede Saggin Trasporti: Via Padre Roberto 80, 36055 Nove (VI)
     try {
-      const hqLat = 45.4950;
-      const hqLon = 11.9600;
-      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${hqLon},${hqLat};${lon},${lat}?overview=false`);
-      const data = await res.json();
-      if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
+      const SAGGIN_HQ_LAT = 45.71902;
+      const SAGGIN_HQ_LON = 11.67734;
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+
+      let distMeters = 0;
+      let durSecs = 0;
+
+      // 1. Mapbox Directions API se token presente
+      if (token) {
+        try {
+          const mbRes = await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving/${SAGGIN_HQ_LON},${SAGGIN_HQ_LAT};${lon},${lat}?access_token=${token}&overview=false`);
+          if (mbRes.ok) {
+            const mbData = await mbRes.json();
+            if (mbData.routes && mbData.routes.length > 0) {
+              distMeters = mbData.routes[0].distance;
+              durSecs = mbData.routes[0].duration;
+            }
+          }
+        } catch (mbe) {
+          console.warn('Mapbox directions fallback to OSRM:', mbe);
+        }
+      }
+
+      // 2. Fallback su OSRM se Mapbox non disponibile
+      if (!distMeters) {
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${SAGGIN_HQ_LON},${SAGGIN_HQ_LAT};${lon},${lat}?overview=false`);
+        const data = await res.json();
+        if (data.routes && data.routes.length > 0) {
+          distMeters = data.routes[0].distance;
+          durSecs = data.routes[0].duration;
+        }
+      }
+
+      if (distMeters > 0) {
         setFormData(prev => ({
           ...prev,
           address: addressName,
           latitude: lat,
           longitude: lon,
-          estimatedDistanceKm: Math.round(route.distance / 1000),
-          estimatedDurationMins: Math.round(route.duration / 60)
+          estimatedDistanceKm: Math.round(distMeters / 1000),
+          estimatedDurationMins: Math.round(durSecs / 60)
         }));
       }
     } catch (e) {
-      console.error('Errore routing:', e);
+      console.error('Errore calcolo percorso da sede Saggin:', e);
     }
   };
 
@@ -390,22 +418,33 @@ export default function TripForm({
               </div>
             </div>
 
-            <div className="flex gap-5 md:p-6">
-              <div className="flex-1 bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] rounded-xl p-3 flex items-center gap-3">
-                <div className="bg-[var(--color-saggin-bg)] p-2 rounded-full"><MapPin size={16} className="text-[var(--color-saggin-text-secondary)]" /></div>
-                <div>
-                  <div className="text-[10px] text-[var(--color-saggin-text-secondary)] font-semibold uppercase">Distanza Stimata</div>
-                  <div className="text-sm font-medium text-[var(--color-saggin-text-primary)]">
-                    {(formData as any).estimatedDistanceKm ? `${(formData as any).estimatedDistanceKm} km` : '--'}
+            <div className="space-y-2">
+              <div className="text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 text-slate-600">
+                <MapPin size={14} className="text-[var(--color-brand-red)] shrink-0" />
+                <span>Punto di partenza calcolo: <strong>Via Padre Roberto 80, 36055 Nove (VI)</strong></span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] rounded-xl p-3 flex items-center gap-3 shadow-2xs">
+                  <div className="bg-red-50 p-2 rounded-xl text-[var(--color-brand-red)] border border-red-200">
+                    <MapPin size={16} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-[var(--color-saggin-text-secondary)] font-bold uppercase tracking-wider">Distanza dalla Sede</div>
+                    <div className="text-base font-bold font-space text-[var(--color-saggin-text-primary)]">
+                      {(formData as any).estimatedDistanceKm ? `${(formData as any).estimatedDistanceKm} km` : '--'}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex-1 bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] rounded-xl p-3 flex items-center gap-3">
-                <div className="bg-[var(--color-saggin-bg)] p-2 rounded-full"><FileText size={16} className="text-[var(--color-saggin-text-secondary)]" /></div>
-                <div>
-                  <div className="text-[10px] text-[var(--color-saggin-text-secondary)] font-semibold uppercase">Tempo Previsto</div>
-                  <div className="text-sm font-medium text-[var(--color-saggin-text-primary)]">
-                    {(formData as any).estimatedDurationMins ? `${(formData as any).estimatedDurationMins} min` : '--'}
+                <div className="bg-[var(--color-saggin-surface)] border border-[var(--color-saggin-border)] rounded-xl p-3 flex items-center gap-3 shadow-2xs">
+                  <div className="bg-red-50 p-2 rounded-xl text-[var(--color-brand-red)] border border-red-200">
+                    <Clock size={16} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-[var(--color-saggin-text-secondary)] font-bold uppercase tracking-wider">Tempo di Viaggio</div>
+                    <div className="text-base font-bold font-space text-[var(--color-saggin-text-primary)]">
+                      {(formData as any).estimatedDurationMins ? `${(formData as any).estimatedDurationMins} min` : '--'}
+                    </div>
                   </div>
                 </div>
               </div>

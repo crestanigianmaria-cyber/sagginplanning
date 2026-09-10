@@ -75,11 +75,11 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
       if (typeof window !== 'undefined' && 'geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
           (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-          () => resolve({ lat: 45.4642, lng: 9.1900 }),
+          () => resolve({ lat: 45.71902, lng: 11.67734 }),
           { enableHighAccuracy: true, timeout: 8000 }
         )
       } else {
-        resolve({ lat: 45.4642, lng: 9.1900 })
+        resolve({ lat: 45.71902, lng: 11.67734 })
       }
     })
   }
@@ -156,8 +156,8 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
-  const lat = trip.latitude || 45.4642
-  const lng = trip.longitude || 9.1900
+  const lat = trip.latitude || 45.71902
+  const lng = trip.longitude || 11.67734
   const mapboxStaticUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+e31e24(${lng},${lat})/${lng},${lat},14,0/600x300@2x?access_token=${token}`
 
   return (
