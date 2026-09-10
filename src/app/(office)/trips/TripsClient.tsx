@@ -120,8 +120,15 @@ export default function TripsClient({ initialTrips, drivers, vehicles }: any) {
                   <span className="font-semibold text-[var(--color-brand-red)]">{new Date(trip.date).toLocaleDateString()} - {trip.scheduledTime}</span>
                   <StatusBadge status={trip.status} size="sm" />
                 </div>
-                <div className="text-sm font-medium text-[var(--color-saggin-text-primary)] mb-1">{trip.address}</div>
-                <div className="text-xs text-[var(--color-saggin-text-secondary)]">{trip.driver?.name}</div>
+                <div className="text-sm font-semibold text-[var(--color-saggin-text-primary)] mb-0.5">
+                  {trip.clientName || trip.contactName || trip.cargoDescription}
+                </div>
+                <div className="text-xs text-[var(--color-saggin-text-secondary)] mb-1 flex items-center gap-1">
+                  <span>📍 {trip.address}</span>
+                </div>
+                <div className="text-xs text-[var(--color-saggin-text-secondary)]">
+                  Autista: <strong className="text-[var(--color-saggin-text-primary)]">{trip.driver?.name || 'Da assegnare'}</strong>
+                </div>
                 <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                   <div className="flex items-center gap-1.5">
                     <User size={13} className="text-[var(--color-brand-red)]" />

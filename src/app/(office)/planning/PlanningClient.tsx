@@ -38,13 +38,28 @@ export default function PlanningClient({
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay() || 7);
   const [trips, setTrips] = useState<any[]>(initialTrips || []);
+  const [unassignedTrips, setUnassignedTrips] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedDriverForNewTrip, setSelectedDriverForNewTrip] = useState<string | undefined>(undefined);
 
+  const fetchUnassignedTrips = async () => {
+    try {
+      // I viaggi da assegnare vengono recuperati SEMPRE, indipendentemente dalla data o settimana!
+      const res = await fetch('/api/trips?unassigned=true');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setUnassignedTrips(data.data);
+      }
+    } catch (e) {
+      console.error('Error fetching unassigned trips:', e);
+    }
+  };
+
   useEffect(() => {
     fetchTrips();
+    fetchUnassignedTrips();
   }, [currentDate, selectedDay]);
 
   const getWeekDates = (date: Date) => {
@@ -130,6 +145,7 @@ export default function PlanningClient({
       if (data.success) {
         closeModal();
         fetchTrips();
+        fetchUnassignedTrips();
       } else {
         alert(data.error || 'Errore durante il salvataggio');
       }
@@ -143,8 +159,7 @@ export default function PlanningClient({
     return targetDate.toISOString().split('T')[0];
   };
 
-  // Filtro viaggi da assegnare
-  const unassignedTrips = trips.filter((t: any) => !t.driverId);
+
 
   return (
     <div className="h-full flex flex-col space-y-5 font-sans relative">
@@ -274,14 +289,16 @@ export default function PlanningClient({
                     >
                       <div className="absolute top-0 left-0 bottom-0 w-1 bg-[var(--color-brand-red)]" />
                       
-                      <div className="flex justify-between items-center mb-1.5 pl-1.5">
+                      <div className="flex justify-between items-center mb-2 pl-1.5">
                         <div className="flex items-center gap-1.5 text-[var(--color-brand-red)] font-bold font-space text-sm">
                           <Clock size={13} />
                           <span>{trip.scheduledTime}</span>
                         </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-50 text-[var(--color-brand-red)] border border-red-200">
-                          In sospeso
-                        </span>
+                        {trip.date && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-100/80 text-[var(--color-brand-red)] border border-red-200 font-mono">
+                            📅 {new Date(trip.date).toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' })}
+                          </span>
+                        )}
                       </div>
 
                       <div className="pl-1.5 space-y-1">
@@ -316,6 +333,19 @@ export default function PlanningClient({
                             {trip.createdByName || trip.auditLogs?.find((a: any) => a.action === 'CREATE')?.officeUser?.name || 'Ufficio'}
                           </strong>
                         </div>
+                      </div>
+
+                      {/* Tasto Diretto Assegnazione */}
+                      <div className="mt-2.5 pt-2 border-t border-dashed border-red-200">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTripClick(trip.id);
+                          }}
+                          className="w-full py-1.5 bg-[var(--color-brand-red)] hover:bg-[#b91c1c] text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1 shadow-2xs"
+                        >
+                          <span>Assegna Autista &rarr;</span>
+                        </button>
                       </div>
                     </div>
                   ))

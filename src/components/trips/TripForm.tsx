@@ -30,6 +30,7 @@ export default function TripForm({
 
   const [formData, setFormData] = useState({
     createdById: trip?.createdById || (session?.user as any)?.id || '',
+    clientName: trip?.clientName || '',
     driverId: trip?.driverId || defaultDriverId || '',
     date: trip?.date ? trip.date.split('T')[0] : (defaultDate || ''),
     time: trip?.scheduledTime || '',
@@ -232,6 +233,7 @@ export default function TripForm({
       palletCount: formData.pallets ? parseInt(formData.pallets) : null,
       needsCrane: formData.needsCrane,
       craneWorkRadius: formData.craneRadiusM ? parseFloat(formData.craneRadiusM) : null,
+      clientName: formData.clientName || null,
       address: formData.address,
       contactName: formData.contactName || null,
       contactPhone: formData.contactPhone || null,
@@ -450,14 +452,39 @@ export default function TripForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:p-6 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
               <div>
-                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Contatto in cantiere</label>
-                <input type="text" name="contactName" value={formData.contactName} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Nome Cliente / Destinatario</label>
+                <input 
+                  type="text" 
+                  name="clientName" 
+                  placeholder="Es. Impresa Edile Rossi Srl"
+                  value={formData.clientName} 
+                  onChange={handleChange} 
+                  className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 border outline-none" 
+                />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Telefono</label>
-                <input type="text" name="contactPhone" value={formData.contactPhone} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Numero Impegno Cliente</label>
+                <input 
+                  type="text" 
+                  name="customerRef" 
+                  placeholder="Es. IMP-2026-089"
+                  value={formData.customerRef} 
+                  onChange={handleChange} 
+                  className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 border outline-none font-mono" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Referente / Contatto in cantiere</label>
+                <input type="text" name="contactName" placeholder="Es. Geom. Bianchi" value={formData.contactName} onChange={handleChange} className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 border outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Telefono Referente</label>
+                <input type="text" name="contactPhone" placeholder="Es. +39 340 1234567" value={formData.contactPhone} onChange={handleChange} className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 border outline-none" />
               </div>
             </div>
           </div>

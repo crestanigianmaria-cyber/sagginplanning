@@ -10,30 +10,37 @@ export async function GET(request: NextRequest) {
     const weekStart = searchParams.get('weekStart');
     const driverId = searchParams.get('driverId');
     const status = searchParams.get('status');
+    const unassigned = searchParams.get('unassigned');
 
     const where: any = {};
 
-    if (date) {
-      const startOfDay = new Date(date);
-      startOfDay.setUTCHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setUTCHours(23, 59, 59, 999);
-      where.date = { gte: startOfDay, lte: endOfDay };
-    } else if (weekStart) {
-      const startOfWeek = new Date(weekStart);
-      startOfWeek.setUTCHours(0, 0, 0, 0);
-      const endOfWeek = new Date(weekStart);
-      endOfWeek.setDate(endOfWeek.getDate() + 7);
-      endOfWeek.setUTCHours(23, 59, 59, 999);
-      where.date = { gte: startOfWeek, lte: endOfWeek };
-    }
+    if (unassigned === 'true') {
+      // I viaggi da assegnare devono essere visibili SEMPRE, indipendentemente dalla settimana o data!
+      where.driverId = null;
+      where.status = { notIn: ['ANNULLATO', 'COMPLETATO'] };
+    } else {
+      if (date) {
+        const startOfDay = new Date(date);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        where.date = { gte: startOfDay, lte: endOfDay };
+      } else if (weekStart) {
+        const startOfWeek = new Date(weekStart);
+        startOfWeek.setUTCHours(0, 0, 0, 0);
+        const endOfWeek = new Date(weekStart);
+        endOfWeek.setDate(endOfWeek.getDate() + 7);
+        endOfWeek.setUTCHours(23, 59, 59, 999);
+        where.date = { gte: startOfWeek, lte: endOfWeek };
+      }
 
-    if (driverId) {
-      where.driverId = driverId;
-    }
+      if (driverId) {
+        where.driverId = driverId;
+      }
 
-    if (status) {
-      where.status = status;
+      if (status) {
+        where.status = status;
+      }
     }
 
     const trips = await prisma.trip.findMany({

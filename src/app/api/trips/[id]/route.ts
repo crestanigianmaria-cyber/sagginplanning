@@ -29,7 +29,7 @@ export async function PUT(request: NextRequest, { params }: any) {
     const body = await request.json();
 
     // Whitelist dei soli campi modificabili
-    const allowed = ['date','scheduledTime','driverId','vehicleId','trailerId','cargoDescription','cargoWeight','cargoLength','cargoWidth','cargoHeight','palletCount','needsCrane','craneWorkRadius','address','latitude','longitude','contactName','contactPhone','clientOrderNumber','notes','estimatedDistanceKm','estimatedDurationMins'];
+    const allowed = ['date','scheduledTime','driverId','vehicleId','trailerId','cargoDescription','clientName','cargoWeight','cargoLength','cargoWidth','cargoHeight','palletCount','needsCrane','craneWorkRadius','address','latitude','longitude','contactName','contactPhone','clientOrderNumber','notes','estimatedDistanceKm','estimatedDurationMins','createdById'];
     const data: any = {};
     for (const key of allowed) { if (key in body) data[key] = body[key]; }
 
