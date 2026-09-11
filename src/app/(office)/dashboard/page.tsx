@@ -9,7 +9,7 @@ const prisma = new PrismaClient()
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
-  if (!session || (session.user as any)?.type !== 'OFFICE') redirect('/')
+  if (!session || (session.user as any)?.userType !== 'OFFICE') redirect('/')
 
   // Calcolo KPI della giornata
   const today = new Date()

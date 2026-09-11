@@ -294,57 +294,57 @@ export default function TripForm({
         </section>
 
         {/* Sezione 2: Mezzo */}
-        <section className="bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl border border-[var(--color-saggin-border)]">
-          <div className="flex items-center gap-2 mb-4 text-[var(--color-brand-red)]">
+        <section className="bg-[var(--color-saggin-surface)] p-4 md:p-5 rounded-xl border border-[var(--color-saggin-border)]">
+          <div className="flex items-center gap-2 mb-3 text-[var(--color-brand-red)]">
             <Truck className="h-5 w-5" />
-            <h3 className="font-semibold">Mezzo e Allestimento</h3>
+            <h3 className="font-semibold text-sm">Mezzo e Allestimento</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Veicolo Trattore *</label>
-              <select name="vehicleId" value={formData.vehicleId} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">
-  <option value="">Da Assegnare</option>
-  {vehicles?.filter((v:any) => v.type !== 'RIMORCHIO').map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
-</select>
+              <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Veicolo Trattore *</label>
+              <select name="vehicleId" value={formData.vehicleId} onChange={handleChange} className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 outline-none">
+                <option value="">Da Assegnare</option>
+                {vehicles?.filter((v:any) => v.type !== 'RIMORCHIO').map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
+              </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Rimorchio (Opzionale)</label>
-              <select name="trailerId" value={formData.trailerId} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border">
-  <option value="">Nessuno</option>
-  {vehicles?.filter((v:any) => v.type === 'RIMORCHIO').map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
-</select>
+              <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Rimorchio (Opzionale)</label>
+              <select name="trailerId" value={formData.trailerId} onChange={handleChange} className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 outline-none">
+                <option value="">Nessuno</option>
+                {vehicles?.filter((v:any) => v.type === 'RIMORCHIO').map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
+              </select>
             </div>
           </div>
         </section>
 
         {/* Sezione 3: Carico */}
-        <section className="bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl border border-[var(--color-saggin-border)]">
-          <div className="flex items-center gap-2 mb-4 text-[var(--color-brand-red)]">
+        <section className="bg-[var(--color-saggin-surface)] p-4 md:p-5 rounded-xl border border-[var(--color-saggin-border)]">
+          <div className="flex items-center gap-2 mb-3 text-[var(--color-brand-red)]">
             <Package className="h-5 w-5" />
-            <h3 className="font-semibold">Dettagli Carico</h3>
+            <h3 className="font-semibold text-sm">Dettagli Carico</h3>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Descrizione Merce *</label>
-              <input type="text" name="cargoDesc" value={formData.cargoDesc} onChange={handleChange} required className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+              <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Descrizione Merce *</label>
+              <input type="text" name="cargoDesc" value={formData.cargoDesc} onChange={handleChange} required placeholder="Es. Macchinari industriali, tubazioni..." className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 outline-none" />
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-5 md:p-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Peso stimato (kg)</label>
-                <input type="number" name="weightKg" value={formData.weightKg} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Peso stimato (kg)</label>
+                <input type="number" name="weightKg" value={formData.weightKg} onChange={handleChange} placeholder="0" className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 outline-none" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Lung. (m)</label>
-                <input type="number" step="0.1" name="lengthM" value={formData.lengthM} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Lung. (m)</label>
+                <input type="number" step="0.1" name="lengthM" value={formData.lengthM} onChange={handleChange} placeholder="0.0" className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 outline-none" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Larg. (m)</label>
-                <input type="number" step="0.1" name="widthM" value={formData.widthM} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Larg. (m)</label>
+                <input type="number" step="0.1" name="widthM" value={formData.widthM} onChange={handleChange} placeholder="0.0" className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 outline-none" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-saggin-text-secondary)] mb-1">Alt. (m)</label>
-                <input type="number" step="0.1" name="heightM" value={formData.heightM} onChange={handleChange} className="w-full rounded-lg border-[var(--color-saggin-border)]  focus:border-[var(--color-brand-red)] focus:ring-[#dc2626] text-sm py-2 px-3 border" />
+                <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] mb-1">Alt. (m)</label>
+                <input type="number" step="0.1" name="heightM" value={formData.heightM} onChange={handleChange} placeholder="0.0" className="w-full rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-primary)] focus:border-[var(--color-brand-red)] text-sm py-2 px-3 outline-none" />
               </div>
             </div>
           </div>

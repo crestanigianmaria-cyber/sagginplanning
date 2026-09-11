@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { 
   MapPin, Calendar, CheckCircle2, Clock, Play, AlertTriangle, 
-  ArrowRight, User, Sparkles, Filter 
+  ArrowRight, User, Sparkles, Filter, Truck
 } from 'lucide-react'
 import { cn, getDriverAvatar } from '@/lib/utils'
 
@@ -65,10 +65,12 @@ export default function MyTripsPage() {
     if (filterMode === 'today') {
       return t.date?.startsWith(todayStr)
     }
-    // Per 'all', mostriamo prima tutti i viaggi DA_FARE o IN_CORSO (anche se di ieri o domani) + quelli completati oggi
+    // Per 'all', mostriamo prima tutti i viaggi DA_FARE o IN_CORSO + completati
     return t.status !== 'ANNULLATO'
   }).sort((a, b) => {
-    // Ordina per data e orario
+    // Il viaggio IN_CORSO deve sempre stare in cima alla lista!
+    if (a.status === 'IN_CORSO' && b.status !== 'IN_CORSO') return -1;
+    if (b.status === 'IN_CORSO' && a.status !== 'IN_CORSO') return 1;
     const dateComp = (a.date || '').localeCompare(b.date || '')
     if (dateComp !== 0) return dateComp
     return (a.scheduledTime || '').localeCompare(b.scheduledTime || '')
@@ -81,7 +83,7 @@ export default function MyTripsPage() {
     <div className="p-4 space-y-4 font-sans max-w-lg mx-auto">
       
       {/* SCHEDA IDENTITÀ AUTISTA CON FOTO PROFILO */}
-      <div className="bg-[var(--color-saggin-surface)] rounded-2xl p-4 border border-[var(--color-saggin-border)] shadow-xs flex items-center justify-between">
+      <div className="bg-[var(--color-saggin-surface)] rounded-2xl p-4 border border-[var(--color-saggin-border)] shadow-2xs flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/profile" className="shrink-0 relative" title="Visualizza il tuo profilo">
             {driverAvatar ? (
@@ -110,7 +112,7 @@ export default function MyTripsPage() {
 
         <div className="flex flex-col items-end">
           <span className="bg-red-50 text-[var(--color-brand-red)] px-2.5 py-1 rounded-xl font-bold font-space text-xs border border-red-200">
-            {pendingCount} {pendingCount === 1 ? 'da fare' : 'da fare'}
+            {pendingCount} da fare
           </span>
           <span className="text-[10px] text-[var(--color-saggin-text-secondary)] mt-1 font-medium">
             {completedCount} completati
@@ -125,12 +127,12 @@ export default function MyTripsPage() {
           className={cn(
             "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
             filterMode === 'all' 
-              ? "bg-white text-[var(--color-saggin-text-primary)] shadow-xs border border-slate-200" 
+              ? "bg-white text-[var(--color-saggin-text-primary)] shadow-2xs border border-slate-200" 
               : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)]"
           )}
         >
           <span>Tutti in Programma</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 font-mono">
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 font-mono font-bold">
             {allTrips.filter(t => t.status !== 'ANNULLATO').length}
           </span>
         </button>
@@ -140,12 +142,12 @@ export default function MyTripsPage() {
           className={cn(
             "flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5",
             filterMode === 'today' 
-              ? "bg-white text-[var(--color-saggin-text-primary)] shadow-xs border border-slate-200" 
+              ? "bg-white text-[var(--color-saggin-text-primary)] shadow-2xs border border-slate-200" 
               : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)]"
           )}
         >
           <span>Solo di Oggi</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 font-mono">
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 font-mono font-bold">
             {allTrips.filter(t => t.date?.startsWith(todayStr)).length}
           </span>
         </button>
@@ -179,18 +181,26 @@ export default function MyTripsPage() {
             return (
               <Link key={trip.id} href={`/my-trips/${trip.id}`} className="block group">
                 <div className={cn(
-                  "bg-[var(--color-saggin-surface)] rounded-2xl border transition-all p-4 relative overflow-hidden shadow-xs hover:shadow-sm active:scale-[0.99]",
-                  isInProgress ? "border-[var(--color-warning)] ring-2 ring-[var(--color-warning)]/20" :
+                  "bg-[var(--color-saggin-surface)] rounded-2xl border transition-all p-4 relative overflow-hidden shadow-2xs hover:shadow-xs active:scale-[0.99]",
+                  isInProgress ? "border-amber-400 ring-2 ring-amber-400/30 bg-amber-50/15" :
                   isCompleted ? "border-emerald-300 opacity-90" :
                   "border-[var(--color-saggin-border)] hover:border-slate-400"
                 )}>
                   {/* Status Indicator Bar */}
                   <div className={cn(
                     "absolute top-0 left-0 bottom-0 w-1.5",
-                    isInProgress ? "bg-[var(--color-warning)]" :
+                    isInProgress ? "bg-amber-500" :
                     isCompleted ? "bg-[var(--color-success)]" :
                     "bg-slate-400"
                   )} />
+
+                  {/* Banner "In Corso" se attivo */}
+                  {isInProgress && (
+                    <div className="pl-2 mb-2 flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100/80 px-2.5 py-1 rounded-lg border border-amber-300/80 animate-pulse">
+                      <Play size={13} className="fill-amber-600" />
+                      <span>VIAGGIO IN CORSO ORA — Tocca per dettagli / chiusura</span>
+                    </div>
+                  )}
 
                   {/* Top Bar: Data/Orario e Badge Stato */}
                   <div className="flex justify-between items-center pl-2 mb-2">
@@ -202,57 +212,60 @@ export default function MyTripsPage() {
                       
                       {/* Date Pill se diverso da oggi */}
                       {!isToday && tripDate && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)]">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] font-mono">
                           {tripDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
                         </span>
                       )}
                     </div>
 
                     <div className={cn(
-                      "text-xs font-semibold px-2.5 py-1 rounded-full border flex items-center gap-1.5 shadow-2xs",
-                      isCompleted ? "bg-emerald-50 border-emerald-200 text-[var(--color-success)]" :
-                      isInProgress ? "bg-amber-50 border-amber-200 text-[var(--color-warning)] font-bold animate-pulse" :
+                      "text-xs font-bold px-2.5 py-1 rounded-full border flex items-center gap-1.5 shadow-2xs",
+                      isCompleted ? "bg-emerald-50 border-emerald-200 text-emerald-800" :
+                      isInProgress ? "bg-amber-100 border-amber-300 text-amber-900 font-bold" :
                       "bg-slate-100 border-slate-200 text-slate-700"
                     )}>
                       {isCompleted && <CheckCircle2 size={13} />}
-                      {isInProgress && <Play size={13} className="fill-[var(--color-warning)]" />}
+                      {isInProgress && <Play size={13} className="fill-amber-600" />}
                       <span>
                         {trip.status === 'DA_FARE' ? 'Da fare' :
-                         trip.status === 'IN_CORSO' ? 'In corso ora' :
+                         trip.status === 'IN_CORSO' ? 'In corso' :
                          trip.status === 'COMPLETATO' ? 'Completato' : 'Annullato'}
                       </span>
                     </div>
                   </div>
 
+                  {/* Destinatario / Cliente in evidenza */}
+                  <div className="pl-2 mb-1.5">
+                    <div className="text-base font-bold text-[var(--color-saggin-text-primary)] line-clamp-1 leading-snug">
+                      {trip.clientName || trip.contactName || trip.cargoDescription}
+                    </div>
+                  </div>
+
                   {/* Cargo Description */}
-                  <div className="pl-2 mb-3">
-                    <h3 className="text-base font-bold text-[var(--color-saggin-text-primary)] line-clamp-1 leading-snug">
-                      {trip.cargoDescription}
-                    </h3>
+                  <div className="pl-2 mb-3 text-xs font-medium text-slate-600 line-clamp-1">
+                    📦 {trip.cargoDescription}
                   </div>
                   
                   {/* Destinatario e Indirizzo */}
                   <div className="pl-2 mb-3 bg-[var(--color-saggin-elevated)] p-3 rounded-xl border border-[var(--color-saggin-border)]">
-                    <div className="text-xs font-bold text-[var(--color-saggin-text-primary)] mb-0.5 truncate">
-                      {trip.clientName || trip.contactName || 'Destinazione cantiere'}
-                    </div>
-                    <div className="flex items-start gap-1.5 text-[var(--color-saggin-text-secondary)]">
+                    <div className="flex items-start gap-1.5 text-slate-700">
                       <MapPin size={15} className="mt-0.5 flex-shrink-0 text-[var(--color-brand-red)]" />
-                      <span className="text-xs line-clamp-2 leading-relaxed font-medium">{trip.address}</span>
+                      <span className="text-xs line-clamp-2 leading-relaxed font-semibold">{trip.address}</span>
                     </div>
                   </div>
                   
                   {/* Bottom details: Mezzo, Gru e CHI HA CREATO IL VIAGGIO */}
                   <div className="pl-2 pt-2.5 border-t border-[var(--color-saggin-border)]/80 flex flex-col gap-2">
                     <div className="flex justify-between items-center text-xs">
-                      <div className="font-semibold text-[var(--color-saggin-text-secondary)] truncate mr-2">
-                        {trip.vehicle?.name || trip.vehicleName || 'Mezzo da assegnare'}
+                      <div className="font-semibold text-[var(--color-saggin-text-secondary)] truncate mr-2 flex items-center gap-1.5">
+                        <Truck size={14} className="text-slate-400 shrink-0" />
+                        <span className="truncate">{trip.vehicle?.name || trip.vehicleName || 'Mezzo da assegnare'}</span>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
                         {trip.needsCrane && (
-                          <span className="bg-red-50 text-[var(--color-brand-red)] border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
-                            <AlertTriangle size={11} />
+                          <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
+                            <AlertTriangle size={11} className="text-amber-700" />
                             GRU
                           </span>
                         )}

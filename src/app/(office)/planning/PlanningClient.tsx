@@ -16,7 +16,7 @@ import {
   Users,
   User
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getDriverAvatar } from '@/lib/utils';
 import StatusBadge from '@/components/shared/StatusBadge';
 import TripForm from '@/components/trips/TripForm';
 
@@ -162,91 +162,103 @@ export default function PlanningClient({
 
 
   return (
-    <div className="h-full flex flex-col space-y-5 font-sans relative">
+    <div className="h-full flex flex-col space-y-3 font-sans relative min-h-0">
       
-      {/* HEADER PLANNING */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[var(--color-saggin-surface)] p-5 rounded-2xl border border-[var(--color-saggin-border)] shadow-xs shrink-0">
+      {/* UNIFIED COMPACT PLANNING CONTROL BAR */}
+      <div className="bg-[var(--color-saggin-surface)] px-4 py-2.5 rounded-xl border border-[var(--color-saggin-border)] shadow-2xs shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        
+        {/* Left: Title & Quick Add */}
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-red-50 text-[var(--color-brand-red)] rounded-xl border border-red-200">
-            <Calendar className="h-6 w-6" />
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-red-50 text-[var(--color-brand-red)] rounded-lg border border-red-200">
+              <Calendar className="h-4.5 w-4.5 text-[var(--color-brand-red)]" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold font-space text-[var(--color-saggin-text-primary)] leading-tight">Planning Trasporti</h1>
+              <p className="text-[10px] text-[var(--color-saggin-text-secondary)] font-medium">Gestione corse e flotta</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold font-space text-[var(--color-saggin-text-primary)]">Planning Trasporti</h1>
-            <p className="text-xs text-[var(--color-saggin-text-secondary)] mt-0.5">Gestione giornaliera delle partenze e flotta</p>
-          </div>
+
+          <button 
+            onClick={() => handleAddTrip(undefined)}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-brand-red)] hover:bg-[#b91c1c] text-white text-xs font-bold rounded-lg shadow-2xs transition-all active:scale-95"
+          >
+            <Plus size={14} />
+            <span>Nuovo Viaggio</span>
+          </button>
         </div>
         
-        {/* Week Navigator */}
-        <div className="flex items-center gap-2 bg-[var(--color-saggin-elevated)] p-1.5 rounded-xl border border-[var(--color-saggin-border)]">
+        {/* Center: Week Navigator */}
+        <div className="flex items-center gap-1 bg-[var(--color-saggin-elevated)] p-1 rounded-xl border border-[var(--color-saggin-border)] self-start md:self-center">
           <button 
             onClick={() => changeWeek('prev')}
-            className="p-2 hover:bg-white rounded-lg text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all shadow-2xs"
+            className="p-1.5 hover:bg-white rounded-lg text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all shadow-2xs"
             title="Settimana precedente"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           
-          <span className="font-bold font-space text-xs px-3 min-w-[180px] text-center text-[var(--color-saggin-text-primary)]">
+          <span className="font-bold font-space text-xs px-2.5 min-w-[165px] text-center text-[var(--color-saggin-text-primary)]">
             {getWeekString()}
           </span>
           
           <button 
             onClick={() => changeWeek('next')}
-            className="p-2 hover:bg-white rounded-lg text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all shadow-2xs"
+            className="p-1.5 hover:bg-white rounded-lg text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all shadow-2xs"
             title="Settimana successiva"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
           
-          <div className="w-px h-5 bg-[var(--color-saggin-border)] mx-1" />
+          <div className="w-px h-4 bg-[var(--color-saggin-border)] mx-0.5" />
           
           <button 
             onClick={setToday}
-            className="px-3 py-1.5 text-xs font-bold text-[var(--color-brand-red)] hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
+            className="px-2.5 py-1 text-xs font-bold text-[var(--color-brand-red)] hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
           >
             Oggi
           </button>
         </div>
-      </div>
 
-      {/* GIORNI SETTIMANA TABS */}
-      <div className="flex space-x-2 overflow-x-auto pb-1 shrink-0">
-        {WEEK_DAYS.map((day, idx) => {
-          const isSelected = selectedDay === day.id;
-          const dayDate = weekDates[idx];
-          const isCurrentToday = new Date().toDateString() === dayDate.toDateString();
+        {/* Right: Day Selector (Lun - Dom) as compact segmented tabs */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-0.5 md:pb-0">
+          {WEEK_DAYS.map((day, idx) => {
+            const isSelected = selectedDay === day.id;
+            const dayDate = weekDates[idx];
+            const isCurrentToday = new Date().toDateString() === dayDate.toDateString();
 
-          return (
-            <button
-              key={day.id}
-              onClick={() => setSelectedDay(day.id)}
-              className={cn(
-                "px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border flex items-center gap-2",
-                isSelected
-                  ? "bg-[var(--color-brand-red)] text-white border-[var(--color-brand-red)] shadow-xs"
-                  : "bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-secondary)] border-[var(--color-saggin-border)] hover:border-slate-400 hover:text-[var(--color-saggin-text-primary)]"
-              )}
-            >
-              <span>{day.name}</span>
-              <span className={cn(
-                "font-mono text-[10px] px-1.5 py-0.5 rounded",
-                isSelected ? "bg-white/20 text-white" : "bg-[var(--color-saggin-elevated)] text-[var(--color-saggin-text-secondary)]"
-              )}>
-                {dayDate.getDate()}
-              </span>
-              {isCurrentToday && (
+            return (
+              <button
+                key={day.id}
+                onClick={() => setSelectedDay(day.id)}
+                className={cn(
+                  "px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border flex items-center gap-1.5",
+                  isSelected
+                    ? "bg-[var(--color-brand-red)] text-white border-[var(--color-brand-red)] shadow-2xs font-bold"
+                    : "bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-secondary)] border-[var(--color-saggin-border)] hover:border-slate-400 hover:text-[var(--color-saggin-text-primary)]"
+                )}
+              >
+                <span>{day.name.slice(0, 3)}</span>
                 <span className={cn(
-                  "w-1.5 h-1.5 rounded-full",
-                  isSelected ? "bg-white" : "bg-[var(--color-brand-red)]"
-                )} />
-              )}
-            </button>
-          );
-        })}
+                  "font-mono text-[10px] px-1 py-0.2 rounded font-bold",
+                  isSelected ? "bg-white/20 text-white" : "bg-[var(--color-saggin-elevated)] text-[var(--color-saggin-text-secondary)]"
+                )}>
+                  {dayDate.getDate()}
+                </span>
+                {isCurrentToday && (
+                  <span className={cn(
+                    "w-1.5 h-1.5 rounded-full",
+                    isSelected ? "bg-white" : "bg-[var(--color-brand-red)]"
+                  )} />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* PLANNING COLUMNS CONTAINER */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden bg-[var(--color-saggin-surface)] rounded-2xl border border-[var(--color-saggin-border)] relative shadow-xs">
+      {/* PLANNING COLUMNS CONTAINER (FULL HEIGHT, CLEAN HORIZONTAL SCROLL) */}
+      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden bg-[var(--color-saggin-surface)] rounded-2xl border border-[var(--color-saggin-border)] relative shadow-xs">
         {isLoading ? (
           <div className="h-full flex flex-col items-center justify-center text-[var(--color-saggin-text-secondary)]">
             <Loader2 className="h-8 w-8 animate-spin mb-3 text-[var(--color-brand-red)]" />
@@ -256,17 +268,17 @@ export default function PlanningClient({
           <div className="h-full flex min-w-max divide-x divide-[var(--color-saggin-border)]">
             
             {/* COLONNA: VIAGGI DA ASSEGNARE */}
-            <div className="w-80 flex-shrink-0 flex flex-col h-full bg-red-50/20">
-              <div className="p-4 border-b border-red-200/80 bg-red-50/50 sticky top-0 z-10 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-red)] text-white flex items-center justify-center shadow-xs">
-                    <AlertCircle size={16} />
+            <div className="w-76 xl:w-80 flex-shrink-0 flex flex-col h-full bg-red-50/20">
+              <div className="p-3.5 border-b border-red-200/80 bg-red-50/60 sticky top-0 z-10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6.5 h-6.5 rounded-lg bg-[var(--color-brand-red)] text-white flex items-center justify-center shadow-2xs">
+                    <AlertCircle size={15} />
                   </div>
                   <div>
                     <h3 className="font-bold text-xs font-space text-[var(--color-brand-red)] uppercase tracking-wider">
                       Da Assegnare
                     </h3>
-                    <p className="text-[10px] text-red-600 font-medium">Senza autista associato</p>
+                    <p className="text-[10px] text-red-600 font-medium">In attesa di autista</p>
                   </div>
                 </div>
 
@@ -275,9 +287,9 @@ export default function PlanningClient({
                 </span>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-3">
+              <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5">
                 {unassignedTrips.length === 0 ? (
-                  <div className="text-center py-12 px-4 border border-dashed border-red-200 rounded-xl text-xs text-red-500 font-medium">
+                  <div className="text-center py-10 px-4 border border-dashed border-red-200 rounded-xl text-xs text-red-500 font-medium">
                     Tutti i viaggi hanno un autista assegnato
                   </div>
                 ) : (
@@ -285,11 +297,11 @@ export default function PlanningClient({
                     <div 
                       key={trip.id}
                       onClick={() => handleTripClick(trip.id)}
-                      className="bg-white border-2 border-red-200 hover:border-[var(--color-brand-red)] p-3.5 rounded-xl cursor-pointer transition-all shadow-xs hover:shadow-sm relative overflow-hidden group"
+                      className="bg-white border border-red-200 hover:border-[var(--color-brand-red)] p-3 rounded-xl cursor-pointer transition-all shadow-2xs hover:shadow-xs relative overflow-hidden group"
                     >
                       <div className="absolute top-0 left-0 bottom-0 w-1 bg-[var(--color-brand-red)]" />
                       
-                      <div className="flex justify-between items-center mb-2 pl-1.5">
+                      <div className="flex justify-between items-center mb-1.5 pl-1.5">
                         <div className="flex items-center gap-1.5 text-[var(--color-brand-red)] font-bold font-space text-sm">
                           <Clock size={13} />
                           <span>{trip.scheduledTime}</span>
@@ -302,19 +314,19 @@ export default function PlanningClient({
                       </div>
 
                       <div className="pl-1.5 space-y-1">
-                        <div className="text-xs font-bold text-[var(--color-saggin-text-primary)] leading-tight">
+                        <div className="text-xs font-bold text-[var(--color-saggin-text-primary)] leading-tight line-clamp-1">
+                          {trip.clientName || trip.contactName || trip.cargoDescription}
+                        </div>
+                        <div className="text-[11px] text-[var(--color-saggin-text-secondary)] font-medium line-clamp-1">
                           {trip.cargoDescription}
                         </div>
-                        <div className="text-[11px] text-[var(--color-saggin-text-secondary)] font-medium truncate">
-                          {trip.clientName || trip.contactName || 'Destinazione'}
-                        </div>
-                        <div className="flex items-start gap-1 text-[10px] text-slate-400 truncate">
-                          <MapPin size={11} className="shrink-0 mt-0.5 text-red-400" />
+                        <div className="flex items-start gap-1 text-[11px] text-slate-500 line-clamp-1">
+                          <MapPin size={12} className="shrink-0 mt-0.5 text-red-500" />
                           <span className="truncate">{trip.address}</span>
                         </div>
                       </div>
 
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] pl-1.5">
+                      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] pl-1.5">
                         <span className="text-slate-500 font-medium truncate">
                           {trip.vehicle?.name || 'Mezzo da scegliere'}
                         </span>
@@ -325,9 +337,9 @@ export default function PlanningClient({
                         )}
                       </div>
 
-                      <div className="mt-2 pt-2 border-t border-red-100/60 flex items-center justify-between text-[11px] pl-1.5 text-slate-500">
-                        <div className="flex items-center gap-1.5">
-                          <User size={12} className="text-[var(--color-brand-red)]" />
+                      <div className="mt-1.5 pt-1.5 border-t border-red-100/60 flex items-center justify-between text-[10px] pl-1.5 text-slate-500">
+                        <div className="flex items-center gap-1">
+                          <User size={11} className="text-[var(--color-brand-red)]" />
                           <span>Creato da:</span>
                           <strong className="text-[var(--color-saggin-text-primary)]">
                             {trip.createdByName || trip.auditLogs?.find((a: any) => a.action === 'CREATE')?.officeUser?.name || 'Ufficio'}
@@ -336,7 +348,7 @@ export default function PlanningClient({
                       </div>
 
                       {/* Tasto Diretto Assegnazione */}
-                      <div className="mt-2.5 pt-2 border-t border-dashed border-red-200">
+                      <div className="mt-2 pt-2 border-t border-dashed border-red-200">
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -353,10 +365,10 @@ export default function PlanningClient({
 
                 <button 
                   onClick={() => handleAddTrip(undefined)}
-                  className="w-full py-3 border border-dashed border-red-300 rounded-xl text-red-600 hover:bg-red-50 transition-all flex items-center justify-center gap-2 text-xs font-bold shadow-2xs"
+                  className="w-full py-2.5 border border-dashed border-red-300 rounded-xl text-red-600 hover:bg-red-50 transition-all flex items-center justify-center gap-2 text-xs font-bold shadow-2xs"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>+ Nuovo Viaggio da Assegnare</span>
+                  <span>+ Nuovo da Assegnare</span>
                 </button>
               </div>
             </div>
@@ -366,25 +378,27 @@ export default function PlanningClient({
               const driverTrips = trips
                 .filter((t: any) => t.driverId === driver.id)
                 .sort((a: any, b: any) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
+              
+              const avatar = getDriverAvatar(driver.name, driver.profilePicture);
 
               return (
-                <div key={driver.id} className="w-80 flex-shrink-0 flex flex-col h-full bg-[var(--color-saggin-bg)]/40">
+                <div key={driver.id} className="w-76 xl:w-80 flex-shrink-0 flex flex-col h-full bg-[var(--color-saggin-bg)]/40">
                   {/* Driver Column Header */}
-                  <div className="p-4 border-b border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] sticky top-0 z-10 flex items-center gap-3 shadow-2xs">
-                    {driver.profilePicture ? (
+                  <div className="p-3.5 border-b border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] sticky top-0 z-10 flex items-center gap-2.5 shadow-2xs">
+                    {avatar ? (
                       <img 
-                        src={driver.profilePicture} 
+                        src={avatar} 
                         alt={driver.name} 
-                        className="w-10 h-10 rounded-full object-cover border border-[var(--color-saggin-border)] shrink-0 shadow-2xs"
+                        className="w-9 h-9 rounded-full object-cover border-2 border-[var(--color-saggin-border)] shrink-0 shadow-2xs"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] flex items-center justify-center text-xs font-bold font-space text-[var(--color-saggin-text-primary)] shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] flex items-center justify-center text-xs font-bold font-space text-[var(--color-saggin-text-primary)] shrink-0">
                         {driver.name.charAt(0)}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
                       <h3 className="font-bold font-space text-sm text-[var(--color-saggin-text-primary)] truncate">{driver.name}</h3>
-                      <p className="text-[11px] text-[var(--color-saggin-text-secondary)] flex items-center gap-1 mt-0.5 truncate">
+                      <p className="text-[11px] text-[var(--color-saggin-text-secondary)] flex items-center gap-1 mt-0.2 truncate font-medium">
                         <Truck className="h-3 w-3 shrink-0 text-slate-400" />
                         <span className="truncate">{driver.defaultVehicle?.name || 'Senza mezzo fisso'}</span>
                       </p>
@@ -396,7 +410,7 @@ export default function PlanningClient({
                   </div>
 
                   {/* Driver Trips Cards */}
-                  <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                  <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5">
                     {driverTrips.map((trip: any) => {
                       const isCompleted = trip.status === 'COMPLETATO';
                       const isInProgress = trip.status === 'IN_CORSO';
@@ -406,9 +420,9 @@ export default function PlanningClient({
                           key={trip.id}
                           onClick={() => handleTripClick(trip.id)}
                           className={cn(
-                            "bg-[var(--color-saggin-surface)] border p-3.5 rounded-xl cursor-pointer transition-all hover:border-[var(--color-brand-red)] shadow-xs hover:shadow-sm relative overflow-hidden",
-                            isInProgress ? "border-[var(--color-warning)] ring-1 ring-[var(--color-warning)]/30" :
-                            isCompleted ? "border-emerald-200" :
+                            "bg-white border p-3 rounded-xl cursor-pointer transition-all hover:border-[var(--color-brand-red)] shadow-2xs hover:shadow-xs relative overflow-hidden",
+                            isInProgress ? "border-[var(--color-warning)] ring-1 ring-[var(--color-warning)]/30 bg-amber-50/10" :
+                            isCompleted ? "border-emerald-200 bg-emerald-50/10" :
                             "border-[var(--color-saggin-border)]"
                           )}
                         >
@@ -421,7 +435,7 @@ export default function PlanningClient({
                           )} />
                           
                           {/* Top Row: Time & Status Badge */}
-                          <div className="flex justify-between items-center mb-1.5 pl-1.5">
+                          <div className="flex justify-between items-center mb-1 pl-1.5">
                             <span className="font-bold font-space text-sm text-[var(--color-saggin-text-primary)]">
                               {trip.scheduledTime}
                             </span>
@@ -431,20 +445,20 @@ export default function PlanningClient({
                           {/* Cargo & Destination */}
                           <div className="pl-1.5 space-y-1">
                             <div className="text-xs font-bold text-[var(--color-saggin-text-primary)] leading-tight line-clamp-1">
+                              {trip.clientName || trip.contactName || trip.cargoDescription}
+                            </div>
+                            <div className="text-[11px] font-medium text-[var(--color-saggin-text-secondary)] line-clamp-1">
                               {trip.cargoDescription}
                             </div>
-                            <div className="text-[11px] font-semibold text-[var(--color-saggin-text-secondary)] truncate">
-                              {trip.clientName || trip.contactName || 'Destinazione'}
-                            </div>
-                            <div className="flex items-start gap-1 text-[10px] text-slate-400 truncate">
-                              <MapPin size={11} className="shrink-0 mt-0.5 text-slate-400" />
+                            <div className="flex items-start gap-1 text-[11px] text-slate-500 line-clamp-1">
+                              <MapPin size={12} className="shrink-0 mt-0.5 text-slate-400" />
                               <span className="truncate">{trip.address}</span>
                             </div>
                           </div>
                           
                           {/* Bottom Row: Assigned Vehicle & Crane */}
-                          <div className="mt-3 pt-2.5 border-t border-[var(--color-saggin-border)]/70 flex items-center justify-between text-[11px] pl-1.5">
-                            <div className="flex items-center gap-1.5 text-slate-500 font-medium truncate mr-1">
+                          <div className="mt-2.5 pt-2 border-t border-[var(--color-saggin-border)]/70 flex items-center justify-between text-[11px] pl-1.5">
+                            <div className="flex items-center gap-1 text-slate-600 font-medium truncate mr-1">
                               <Truck size={12} className="shrink-0 text-slate-400" />
                               <span className="truncate">{trip.vehicle?.name || 'Nessun mezzo'}</span>
                             </div>
@@ -457,9 +471,9 @@ export default function PlanningClient({
                           </div>
 
                           {/* Chi ha creato il viaggio */}
-                          <div className="mt-2 pt-2 border-t border-[var(--color-saggin-border)]/50 flex items-center justify-between text-[11px] pl-1.5 text-slate-500">
-                            <div className="flex items-center gap-1.5">
-                              <User size={12} className="text-[var(--color-brand-red)]" />
+                          <div className="mt-1.5 pt-1.5 border-t border-[var(--color-saggin-border)]/50 flex items-center justify-between text-[10px] pl-1.5 text-slate-500">
+                            <div className="flex items-center gap-1">
+                              <User size={11} className="text-[var(--color-brand-red)]" />
                               <span>Creato da:</span>
                               <strong className="text-[var(--color-saggin-text-primary)]">
                                 {trip.createdByName || trip.auditLogs?.find((a: any) => a.action === 'CREATE')?.officeUser?.name || 'Ufficio'}
@@ -473,9 +487,9 @@ export default function PlanningClient({
                     {/* Add Trip for Driver */}
                     <button 
                       onClick={() => handleAddTrip(driver.id)}
-                      className="w-full py-3 border border-dashed border-[var(--color-saggin-border)] rounded-xl text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-brand-red)] hover:border-red-300 hover:bg-red-50/50 transition-all flex items-center justify-center gap-2 text-xs font-semibold"
+                      className="w-full py-2.5 border border-dashed border-[var(--color-saggin-border)] rounded-xl text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-brand-red)] hover:border-red-300 hover:bg-red-50/40 transition-all flex items-center justify-center gap-1.5 text-xs font-semibold"
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-3.5 w-3.5" />
                       <span>Aggiungi per {driver.name.split(' ')[0]}</span>
                     </button>
                   </div>

@@ -161,16 +161,17 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
   const mapboxStaticUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+e31e24(${lng},${lat})/${lng},${lat},14,0/600x300@2x?access_token=${token}`
 
   return (
-    <div className="min-h-screen bg-[var(--color-saggin-bg)] flex flex-col pb-36 text-[var(--color-saggin-text-primary)] font-sans relative">
+    <div className="min-h-screen bg-[var(--color-saggin-bg)] flex flex-col pb-28 text-[var(--color-saggin-text-primary)] font-sans relative">
       
       {/* HEADER SPECS: orario, stato, nome cliente/destinatario */}
-      <div className="bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] p-4 sticky top-0 z-20 shadow-sm">
+      <div className="bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] p-4 sticky top-0 z-20 shadow-2xs">
         <div className="flex items-center justify-between gap-3 mb-2">
           <Link 
             href="/my-trips" 
-            className="p-2 -ml-1 rounded-lg hover:bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-secondary)] transition-colors"
+            className="p-2.5 -ml-1 rounded-xl bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] hover:bg-slate-200 transition-colors shadow-2xs flex items-center justify-center"
+            title="Torna all'elenco viaggi"
           >
-            <ArrowLeft size={22} />
+            <ArrowLeft size={20} className="stroke-[2.5]" />
           </Link>
 
           <div className="flex items-center gap-2">
@@ -183,18 +184,18 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className={cn(
-            "px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border",
-            trip.status === 'DA_FARE' ? 'bg-[var(--color-saggin-bg)] border-[var(--color-saggin-border)] text-[var(--color-saggin-text-secondary)]' :
-            trip.status === 'IN_CORSO' ? 'bg-[var(--color-warning)]/15 border-[var(--color-warning)]/40 text-[var(--color-warning)]' :
-            trip.status === 'COMPLETATO' ? 'bg-[var(--color-success)]/15 border-[var(--color-success)]/40 text-[var(--color-success)]' :
-            'bg-red-900/20 border-red-500/30 text-red-400'
+            "px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border shadow-2xs",
+            trip.status === 'DA_FARE' ? 'bg-blue-50 border-blue-200 text-blue-800' :
+            trip.status === 'IN_CORSO' ? 'bg-amber-50 border-amber-300 text-amber-800 animate-pulse' :
+            trip.status === 'COMPLETATO' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' :
+            'bg-slate-100 border-slate-200 text-slate-600'
           )}>
             <span className={cn(
               "w-2 h-2 rounded-full",
-              trip.status === 'DA_FARE' ? 'bg-zinc-500' :
-              trip.status === 'IN_CORSO' ? 'bg-[var(--color-warning)] animate-pulse' :
-              trip.status === 'COMPLETATO' ? 'bg-[var(--color-success)]' :
-              'bg-red-500'
+              trip.status === 'DA_FARE' ? 'bg-blue-600' :
+              trip.status === 'IN_CORSO' ? 'bg-amber-500' :
+              trip.status === 'COMPLETATO' ? 'bg-emerald-600' :
+              'bg-slate-500'
             )} />
             <span>
               {trip.status === 'DA_FARE' ? 'Da fare' :
@@ -208,12 +209,12 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
         <div className="pt-2 border-t border-[var(--color-saggin-border)]/60 flex items-center justify-between">
           <div className="flex items-center gap-2 truncate">
             <Building2 size={16} className="text-[var(--color-brand-red)] shrink-0" />
-            <span className="text-base font-semibold text-[var(--color-saggin-text-primary)] truncate">
+            <span className="text-base font-bold text-[var(--color-saggin-text-primary)] truncate">
               {trip.clientName || trip.contactName || 'Destinazione cantiere'}
             </span>
           </div>
           {trip.clientOrderNumber && (
-            <span className="text-[11px] font-mono bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-secondary)] px-2 py-0.5 rounded border border-[var(--color-saggin-border)] shrink-0 ml-2">
+            <span className="text-[11px] font-mono font-bold bg-[var(--color-saggin-elevated)] text-[var(--color-saggin-text-primary)] px-2 py-0.5 rounded border border-[var(--color-saggin-border)] shrink-0 ml-2">
               #{trip.clientOrderNumber}
             </span>
           )}
@@ -488,20 +489,20 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
 
       </div>
 
-      {/* FIXED BOTTOM ACTION BUTTONS (STICKY) */}
-      <div className="fixed bottom-[65px] left-0 right-0 p-4 bg-[var(--color-saggin-surface)]/95 backdrop-blur-md border-t border-[var(--color-saggin-border)] z-30">
+      {/* FIXED BOTTOM ACTION BUTTONS (STICKY AT PHONE BOTTOM) */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-[var(--color-saggin-surface)]/95 backdrop-blur-md border-t border-[var(--color-saggin-border)] z-30 shadow-lg">
         <div className="max-w-md mx-auto">
           {trip.status === 'DA_FARE' && (
             <button
               disabled={actionLoading}
               onClick={handleStartTrip}
-              className="w-full bg-[var(--color-brand-red)] hover:bg-[#b91c1c] active:scale-[0.98] text-white text-lg font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2"
+              className="w-full bg-[var(--color-success)] hover:bg-[#15803d] active:scale-[0.98] text-white text-lg font-bold py-4 rounded-2xl shadow-md transition-all flex justify-center items-center gap-2.5 cursor-pointer"
             >
               {actionLoading ? (
                 <div className="animate-spin h-6 w-6 border-3 border-white/30 border-t-white rounded-full" />
               ) : (
                 <>
-                  <Play size={20} className="fill-white" />
+                  <Play size={22} className="fill-white" />
                   <span>INIZIA LAVORO</span>
                 </>
               )}
@@ -511,7 +512,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
           {trip.status === 'IN_CORSO' && (
             <button
               onClick={() => setShowEndModal(true)}
-              className="w-full bg-[var(--color-success)] hover:bg-[#329267] active:scale-[0.98] text-white text-lg font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2"
+              className="w-full bg-[var(--color-brand-red)] hover:bg-[#b91c1c] active:scale-[0.98] text-white text-lg font-bold py-4 rounded-2xl shadow-md transition-all flex justify-center items-center gap-2.5 cursor-pointer animate-pulse"
             >
               <Check size={22} className="stroke-[3]" />
               <span>TERMINA LAVORO</span>
@@ -519,7 +520,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
           )}
 
           {trip.status === 'COMPLETATO' && (
-            <div className="w-full bg-[var(--color-success)]/15 text-[var(--color-success)] border border-[var(--color-success)]/30 text-base font-bold py-3.5 rounded-xl text-center flex justify-center items-center gap-2">
+            <div className="w-full bg-emerald-50 text-[var(--color-success)] border border-emerald-300 text-base font-bold py-3.5 rounded-2xl text-center flex justify-center items-center gap-2">
               <CheckCircle size={20} />
               <span>VIAGGIO COMPLETATO</span>
             </div>
