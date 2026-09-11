@@ -32,7 +32,11 @@ export default function TripForm({
     createdById: trip?.createdById || (session?.user as any)?.id || '',
     clientName: trip?.clientName || '',
     driverId: trip?.driverId || defaultDriverId || '',
-    date: trip?.date ? trip.date.split('T')[0] : (defaultDate || ''),
+    date: trip?.date ? (() => {
+      const d = new Date(trip.date);
+      if (isNaN(d.getTime())) return trip.date.split('T')[0] || '';
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })() : (defaultDate || ''),
     time: trip?.scheduledTime || '',
     vehicleId: trip?.vehicleId || '',
     hasCraneConfig: false,
@@ -221,7 +225,7 @@ export default function TripForm({
     const payload = {
       createdById: formData.createdById || undefined,
       driverId: formData.driverId || null,
-      date: new Date(formData.date).toISOString(),
+      date: new Date(`${formData.date}T12:00:00.000Z`).toISOString(),
       scheduledTime: formData.time,
       vehicleId: formData.vehicleId || null,
       trailerId: formData.trailerId || null,

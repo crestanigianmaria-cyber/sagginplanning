@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         const startOfWeek = new Date(weekStart);
         startOfWeek.setUTCHours(0, 0, 0, 0);
         const endOfWeek = new Date(weekStart);
-        endOfWeek.setDate(endOfWeek.getDate() + 7);
+        endOfWeek.setDate(endOfWeek.getDate() + 6);
         endOfWeek.setUTCHours(23, 59, 59, 999);
         where.date = { gte: startOfWeek, lte: endOfWeek };
       }
