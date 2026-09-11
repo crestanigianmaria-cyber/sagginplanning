@@ -7,7 +7,7 @@ export async function POST(request: NextRequest, { params }: any) {
     const body = await request.json();
     const lat = body.lat ?? body.latitude ?? null;
     const lng = body.lng ?? body.longitude ?? null;
-    const { actualCraneHours, driverNotes } = body;
+    const { actualCraneHours, driverNotes, recipientSignature, recipientName, deliveryPhotoUrl } = body;
 
     const trip = await prisma.trip.findUnique({ where: { id } });
     if (!trip) return NextResponse.json({ success: false, error: 'Viaggio non trovato' }, { status: 404 });
@@ -29,6 +29,10 @@ export async function POST(request: NextRequest, { params }: any) {
         workedMinutes,
         actualCraneHours: actualCraneHours ? parseFloat(actualCraneHours) : null,
         driverNotes: driverNotes || null,
+        recipientSignature: recipientSignature || null,
+        recipientName: recipientName || null,
+        deliveryPhotoUrl: deliveryPhotoUrl || null,
+        signedAt: recipientSignature ? new Date() : null,
       },
     });
 

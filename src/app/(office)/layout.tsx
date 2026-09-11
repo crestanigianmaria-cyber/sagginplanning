@@ -1,6 +1,6 @@
 'use client';
 import { signOut, useSession } from "next-auth/react";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -24,15 +24,37 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
   const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [hasUnread, setHasUnread] = useState(true);
 
-  const navItems = [
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/notifications');
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setNotifications(json.data);
+      }
+    } catch (e) {
+      console.error('Error fetching notifications:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const navItems: { name: string; href: string; icon: any; disabled?: boolean }[] = [
     { name: 'Panoramica', href: '/dashboard', icon: BarChart3 },
     { name: 'Planning', href: '/planning', icon: CalendarDays },
+    { name: 'Mappa Flotta', href: '/map', icon: Map },
+    { name: 'Report', href: '/reports', icon: BarChart3 },
     { name: 'Viaggi', href: '/trips', icon: Route },
     { name: 'Mezzi', href: '/vehicles', icon: Truck },
     { name: 'Autisti', href: '/drivers', icon: Users },
     { name: 'Ore Lavoro', href: '/office-hours', icon: Clock },
-    { name: 'Mappa', href: '#', icon: Map, disabled: true },
   ];
 
   const isPlanning = pathname.startsWith('/planning');
@@ -232,11 +254,83 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
               <span>{new Date().toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
             </div>
             
-            {/* Notifiche */}
-            <button className="relative p-1.5 text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] hover:bg-[var(--color-saggin-elevated)] rounded-lg transition-colors">
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[var(--color-brand-red)]" />
-            </button>
+            {/* Notifiche con Dropdown Interattivo */}
+            <div className="relative">
+              <button 
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setHasUnread(false);
+                }}
+                className="relative p-1.5 text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] hover:bg-[var(--color-saggin-elevated)] rounded-lg transition-colors"
+                title="Notifiche e attività flotta"
+              >
+                <Bell className="h-4 w-4" />
+                {hasUnread && notifications.length > 0 && (
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[var(--color-brand-red)] animate-pulse" />
+                )}
+              </button>
+
+              {showNotifications && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-30" 
+                    onClick={() => setShowNotifications(false)} 
+                  />
+                  <div className="absolute right-0 mt-2 w-80 sm:w-92 bg-white rounded-2xl border border-[var(--color-saggin-border)] shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="p-3.5 border-b border-[var(--color-saggin-border)] bg-[var(--color-saggin-elevated)] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bell size={15} className="text-[var(--color-brand-red)]" />
+                        <h4 className="text-xs font-bold font-space text-[var(--color-saggin-text-primary)] uppercase tracking-wider">
+                          Attività Flotta & Corse
+                        </h4>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        {notifications.length} eventi
+                      </span>
+                    </div>
+
+                    <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 p-1">
+                      {notifications.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                          Nessuna notifica recente
+                        </div>
+                      ) : (
+                        notifications.map((notif: any) => (
+                          <div 
+                            key={notif.id} 
+                            className="p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                            onClick={() => setShowNotifications(false)}
+                          >
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <span className={cn(
+                                "text-xs font-bold leading-tight",
+                                notif.type === 'success' ? "text-emerald-700" :
+                                notif.type === 'warning' ? "text-amber-700" :
+                                "text-slate-800"
+                              )}>
+                                {notif.title}
+                              </span>
+                              <span className="text-[9px] text-slate-400 shrink-0 font-mono">
+                                {new Date(notif.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 font-medium line-clamp-2">
+                              {notif.message}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="p-2 border-t border-[var(--color-saggin-border)] bg-slate-50 text-center">
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        Aggiornato in tempo reale dal sistema
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 

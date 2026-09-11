@@ -230,6 +230,10 @@ model Trip {
   estimatedDistanceKm   Float?
   actualCraneHours      Float?
   driverNotes           String?
+  recipientSignature    String?
+  recipientName         String?
+  deliveryPhotoUrl      String?
+  signedAt              DateTime?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   createdById        String?

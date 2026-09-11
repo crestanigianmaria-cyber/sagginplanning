@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { 
   ArrowLeft, MapPin, Package, AlertTriangle, Truck, Clock, 
   CheckCircle, Navigation, Phone, Play, Check, ShieldAlert,
-  Calendar, Building2, Hash, FileText
+  Calendar, Building2, Hash, FileText, Camera, Trash2, ZoomIn, X, PenTool, CheckCircle2
 } from 'lucide-react'
+import SignaturePad from '@/components/driver/SignaturePad'
 import { cn, getDriverAvatar } from '@/lib/utils'
 
 export default function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,6 +27,42 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
   const [showEndModal, setShowEndModal] = useState(false)
   const [actualCraneHours, setActualCraneHours] = useState('')
   const [driverNotes, setDriverNotes] = useState('')
+  const [recipientSignature, setRecipientSignature] = useState<string | null>(null)
+  const [recipientName, setRecipientName] = useState('')
+  const [deliveryPhotoUrl, setDeliveryPhotoUrl] = useState<string | null>(null)
+  const [fullscreenPhoto, setFullscreenPhoto] = useState<string | null>(null)
+
+  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+        const maxDim = 1200
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width)
+            width = maxDim
+          } else {
+            width = Math.round((width * maxDim) / height)
+            height = maxDim
+          }
+        }
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx?.drawImage(img, 0, 0, width, height)
+        const compressed = canvas.toDataURL('image/jpeg', 0.75)
+        setDeliveryPhotoUrl(compressed)
+      }
+      img.src = event.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
 
   useEffect(() => {
     fetchTrip()
@@ -119,7 +156,10 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
           lat: coords.lat, 
           lng: coords.lng, 
           actualCraneHours, 
-          driverNotes 
+          driverNotes,
+          recipientSignature,
+          recipientName,
+          deliveryPhotoUrl
         })
       })
 
@@ -484,6 +524,51 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                 </p>
               </div>
             )}
+
+            {/* FIRMA DIGITALE RICEVENTE */}
+            {trip.recipientSignature && (
+              <div className="pt-3 border-t border-[var(--color-saggin-border)] space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-[var(--color-saggin-text-primary)] flex items-center gap-1.5">
+                    <CheckCircle2 size={14} className="text-[var(--color-success)]" />
+                    <span>Firma Ricevuta Cantiere:</span>
+                  </div>
+                  {trip.signedAt && (
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {new Date(trip.signedAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </div>
+                {trip.recipientName && (
+                  <div className="text-xs text-slate-600 font-semibold">
+                    Firmato da: <span className="text-slate-900">{trip.recipientName}</span>
+                  </div>
+                )}
+                <div className="bg-white p-2 rounded-xl border border-slate-200 inline-block shadow-2xs max-w-full">
+                  <img src={trip.recipientSignature} alt="Firma Cantiere" className="h-16 object-contain" />
+                </div>
+              </div>
+            )}
+
+            {/* FOTO BOLLA / SCARICO */}
+            {trip.deliveryPhotoUrl && (
+              <div className="pt-3 border-t border-[var(--color-saggin-border)] space-y-2">
+                <div className="text-xs font-bold text-[var(--color-saggin-text-primary)] flex items-center gap-1.5">
+                  <Camera size={14} className="text-[var(--color-brand-red)]" />
+                  <span>Foto Bolla DDT / Scarico:</span>
+                </div>
+                <div 
+                  onClick={() => setFullscreenPhoto(trip.deliveryPhotoUrl)}
+                  className="relative rounded-xl overflow-hidden border border-slate-200 cursor-pointer group inline-block max-w-xs shadow-2xs"
+                >
+                  <img src={trip.deliveryPhotoUrl} alt="Foto Bolla" className="w-full h-36 object-cover" />
+                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+                    <ZoomIn size={16} />
+                    <span>Ingrandisci</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -528,6 +613,19 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
+      {/* FULLSCREEN PHOTO PREVIEW MODAL */}
+      {fullscreenPhoto && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-4" onClick={() => setFullscreenPhoto(null)}>
+          <button 
+            onClick={() => setFullscreenPhoto(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"
+          >
+            <X size={20} />
+          </button>
+          <img src={fullscreenPhoto} alt="Foto Bolla Grande" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl" />
+        </div>
+      )}
+
       {/* END TRIP CONFIRMATION MODAL */}
       {showEndModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -558,7 +656,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             )}
             
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-xs font-semibold text-[var(--color-saggin-text-secondary)] uppercase tracking-wider mb-2">
                 Note autista / Eventuali problemi
               </label>
@@ -566,8 +664,54 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                 value={driverNotes}
                 onChange={(e) => setDriverNotes(e.target.value)}
                 placeholder="Nessun problema, scaricato regolarmente..."
-                rows={3}
+                rows={2}
                 className="w-full bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] text-sm rounded-xl p-3 focus:border-[var(--color-brand-red)] outline-none resize-none"
+              />
+            </div>
+
+            {/* SEZIONE FOTO BOLLA DDT / CARICO */}
+            <div className="mb-4 p-3 rounded-xl border border-slate-200 bg-[var(--color-saggin-bg)]">
+              <label className="block text-xs font-bold text-[var(--color-saggin-text-primary)] mb-1 flex items-center gap-1.5">
+                <Camera size={14} className="text-[var(--color-brand-red)]" />
+                <span>Foto Bolla Firmata o Scarico Mezzo</span>
+              </label>
+              <p className="text-[11px] text-slate-500 mb-2">
+                Scatta o allega una foto della bolla controfirmata in cantiere
+              </p>
+
+              {deliveryPhotoUrl ? (
+                <div className="relative inline-block">
+                  <img src={deliveryPhotoUrl} alt="Anteprima Bolla" className="w-24 h-24 object-cover rounded-xl border border-slate-300 shadow-2xs" />
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryPhotoUrl(null)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-700 transition-colors"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-dashed border-slate-300 bg-white hover:bg-slate-50 cursor-pointer text-xs font-bold text-slate-700 transition-all">
+                  <Camera size={16} className="text-[var(--color-brand-red)]" />
+                  <span>Scatta o Scegli Foto</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handlePhotoCapture}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* SEZIONE FIRMA TOUCH */}
+            <div className="mb-6 p-3 rounded-xl border border-slate-200 bg-[var(--color-saggin-bg)]">
+              <SignaturePad 
+                onSignatureChange={(sig, name) => {
+                  setRecipientSignature(sig)
+                  setRecipientName(name)
+                }}
               />
             </div>
             

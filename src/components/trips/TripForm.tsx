@@ -2,7 +2,7 @@
 import { useSession } from 'next-auth/react';
 
 import React, { useState, useEffect } from 'react';
-import { Clock, ShieldCheck, AlertTriangle, AlertOctagon, Save, X, Truck, Package, MapPin, User, FileText, Anchor } from 'lucide-react';
+import { Clock, ShieldCheck, AlertTriangle, AlertOctagon, Save, X, Truck, Package, MapPin, User, FileText, Anchor, CheckCircle2, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function TripForm({ 
@@ -257,6 +257,51 @@ export default function TripForm({
         <div className="pb-2 border-b border-[var(--color-saggin-border)]/50">
           <p className="text-xs uppercase tracking-wider font-semibold text-[var(--color-saggin-text-secondary)]">Parametri di trasporto e carico</p>
         </div>
+
+        {/* Banner Ricevuta Cantiere Firmata se completato */}
+        {(trip?.recipientSignature || trip?.deliveryPhotoUrl) && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
+                <CheckCircle2 size={18} className="text-emerald-600" />
+                <span>Ricevuta Cantiere Firmata & Documento di Consegna</span>
+              </div>
+              {trip.signedAt && (
+                <span className="text-xs text-emerald-700 font-mono">
+                  Firmato il {new Date(trip.signedAt).toLocaleString('it-IT')}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-emerald-200/60">
+              {trip.recipientName && (
+                <div className="text-xs text-slate-700">
+                  <span className="text-slate-500 font-medium">Firmatario cantiere:</span>
+                  <strong className="block text-slate-900 text-sm">{trip.recipientName}</strong>
+                </div>
+              )}
+
+              {trip.recipientSignature && (
+                <div>
+                  <span className="text-xs text-slate-500 font-medium block mb-1">Firma Ricevente:</span>
+                  <div className="bg-white p-1.5 rounded-lg border border-emerald-300 inline-block shadow-2xs">
+                    <img src={trip.recipientSignature} alt="Firma Cantiere" className="h-12 object-contain" />
+                  </div>
+                </div>
+              )}
+
+              {trip.deliveryPhotoUrl && (
+                <div>
+                  <span className="text-xs text-slate-500 font-medium block mb-1">Foto Bolla / Scarico:</span>
+                  <a href={trip.deliveryPhotoUrl} target="_blank" rel="noopener noreferrer" className="inline-block group relative">
+                    <img src={trip.deliveryPhotoUrl} alt="Foto Bolla" className="h-16 w-24 object-cover rounded-lg border border-emerald-300 shadow-2xs group-hover:opacity-90 transition-opacity" />
+                    <span className="text-[10px] text-emerald-700 font-bold block mt-0.5 hover:underline">Apri foto intera &rarr;</span>
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Sezione 1: Assegnazione */}
         <section className="bg-[var(--color-saggin-surface)] p-5 md:p-6 rounded-xl border border-[var(--color-saggin-border)]">

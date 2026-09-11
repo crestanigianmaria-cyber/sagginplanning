@@ -17,7 +17,8 @@ import {
   User, 
   Columns3, 
   LayoutGrid, 
-  ArrowRight
+  ArrowRight,
+  GripVertical
 } from 'lucide-react';
 import { cn, getDriverAvatar } from '@/lib/utils';
 import StatusBadge from '@/components/shared/StatusBadge';
@@ -71,6 +72,10 @@ export default function PlanningClient({
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedDriverForNewTrip, setSelectedDriverForNewTrip] = useState<string | undefined>(undefined);
   const [selectedDateForNewTrip, setSelectedDateForNewTrip] = useState<string | undefined>(undefined);
+
+  // Drag and drop state
+  const [draggedTripId, setDraggedTripId] = useState<string | null>(null);
+  const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
 
   const weekDates = useMemo(() => getWeekDates(currentDate), [currentDate]);
   const mondayStr = useMemo(() => formatLocalDateStr(weekDates[0]), [weekDates]);
@@ -169,6 +174,56 @@ export default function PlanningClient({
     }
   };
 
+  // Spostamento viaggio tramite Drag & Drop (cambio autista e/o data)
+  const handleMoveTrip = async (tripId: string, newDriverId: string | null, newDateStr?: string) => {
+    try {
+      const payload: any = { driverId: newDriverId };
+      if (newDateStr) {
+        payload.date = new Date(`${newDateStr}T12:00:00.000Z`).toISOString();
+      }
+
+      // Aggiornamento ottimistico dell'interfaccia
+      if (newDriverId === null) {
+        const found = trips.find(t => t.id === tripId);
+        if (found) {
+          setTrips(prev => prev.filter(t => t.id !== tripId));
+          setUnassignedTrips(prev => [{ ...found, driverId: null, driver: null }, ...prev]);
+        }
+      } else {
+        const unassignedFound = unassignedTrips.find(t => t.id === tripId);
+        const targetDriver = initialDrivers.find((d: any) => d.id === newDriverId);
+        if (unassignedFound) {
+          setUnassignedTrips(prev => prev.filter(t => t.id !== tripId));
+          setTrips(prev => [...prev, { ...unassignedFound, driverId: newDriverId, driver: targetDriver, ...(newDateStr ? { date: payload.date } : {}) }]);
+        } else {
+          setTrips(prev => prev.map(t => {
+            if (t.id === tripId) {
+              return { ...t, driverId: newDriverId, driver: targetDriver, ...(newDateStr ? { date: payload.date } : {}) };
+            }
+            return t;
+          }));
+        }
+      }
+
+      const res = await fetch(`/api/trips/${tripId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.message || data.error || 'Impossibile riassegnare il viaggio');
+        fetchWeekTrips();
+        fetchUnassignedTrips();
+      }
+    } catch (e) {
+      console.error('Drag and drop move error:', e);
+      fetchWeekTrips();
+      fetchUnassignedTrips();
+    }
+  };
+
   // Viaggi filtrati per il giorno selezionato (nella vista a colonne)
   const selectedDayDate = weekDates[selectedDay - 1];
   const selectedDayDateStr = formatLocalDateStr(selectedDayDate);
@@ -218,7 +273,7 @@ export default function PlanningClient({
                 </span>
               </div>
               <p className="text-[11px] text-[var(--color-saggin-text-secondary)] font-medium">
-                Gestione logistica trasporti e flotta Saggin
+                Trascina le corse tra autisti o giorni con il mouse (Drag & Drop)
               </p>
             </div>
           </div>
@@ -360,7 +415,7 @@ export default function PlanningClient({
         </div>
       )}
 
-      {/* CONTENUTO PLANNING: VISTA A COLONNE (KANBAN) */}
+      {/* CONTENUTO PLANNING: VISTA A COLONNE (KANBAN) CON DRAG & DROP */}
       {viewMode === 'columns' && (
         <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden bg-[var(--color-saggin-surface)] rounded-2xl border border-[var(--color-saggin-border)] relative shadow-xs">
           {isLoading ? (
@@ -371,8 +426,29 @@ export default function PlanningClient({
           ) : (
             <div className="h-full flex min-w-max divide-x divide-[var(--color-saggin-border)]">
               
-              {/* COLONNA: VIAGGI DA ASSEGNARE (SEMPRE VISIBILE) */}
-              <div className="w-80 xl:w-84 flex-shrink-0 flex flex-col h-full bg-red-50/20">
+              {/* COLONNA: VIAGGI DA ASSEGNARE (DROP TARGET PER RIMUOVERE ASSEGNAZIONE) */}
+              <div 
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  setDragOverTarget('unassigned');
+                }}
+                onDragLeave={() => {
+                  if (dragOverTarget === 'unassigned') setDragOverTarget(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const raw = e.dataTransfer.getData('text/plain');
+                  if (!raw) return;
+                  const data = JSON.parse(raw);
+                  handleMoveTrip(data.tripId, null);
+                  setDragOverTarget(null);
+                }}
+                className={cn(
+                  "w-80 xl:w-84 flex-shrink-0 flex flex-col h-full transition-colors relative",
+                  dragOverTarget === 'unassigned' ? "bg-red-100/50 ring-2 ring-inset ring-[var(--color-brand-red)]" : "bg-red-50/20"
+                )}
+              >
                 <div className="p-3.5 border-b border-red-200/80 bg-red-50/70 sticky top-0 z-10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-red)] text-white flex items-center justify-center shadow-2xs">
@@ -382,7 +458,7 @@ export default function PlanningClient({
                       <h3 className="font-bold text-xs font-space text-[var(--color-brand-red)] uppercase tracking-wider">
                         Da Assegnare
                       </h3>
-                      <p className="text-[10px] text-red-600 font-medium">In attesa di autista</p>
+                      <p className="text-[10px] text-red-600 font-medium">Trascina qui per disassegnare</p>
                     </div>
                   </div>
 
@@ -400,14 +476,28 @@ export default function PlanningClient({
                     unassignedTrips.map((trip: any) => (
                       <div 
                         key={trip.id}
+                        draggable={true}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', JSON.stringify({ tripId: trip.id, sourceDriverId: null }));
+                          e.dataTransfer.effectAllowed = 'move';
+                          setDraggedTripId(trip.id);
+                        }}
+                        onDragEnd={() => {
+                          setDraggedTripId(null);
+                          setDragOverTarget(null);
+                        }}
                         onClick={() => handleTripClick(trip.id)}
-                        className="bg-white border border-red-200 hover:border-[var(--color-brand-red)] p-3.5 rounded-xl cursor-pointer transition-all shadow-2xs hover:shadow-xs relative overflow-hidden group"
+                        className={cn(
+                          "bg-white border border-red-200 hover:border-[var(--color-brand-red)] p-3.5 rounded-xl cursor-grab active:cursor-grabbing transition-all shadow-2xs hover:shadow-xs relative overflow-hidden group select-none",
+                          draggedTripId === trip.id && "opacity-40 ring-2 ring-[var(--color-brand-red)] scale-95"
+                        )}
                       >
                         <div className="absolute top-0 left-0 bottom-0 w-1 bg-[var(--color-brand-red)]" />
                         
                         <div className="flex justify-between items-center mb-2 pl-1.5">
                           <div className="flex items-center gap-1.5 text-[var(--color-brand-red)] font-bold font-space text-sm">
-                            <Clock size={14} />
+                            <GripVertical size={13} className="text-red-400 opacity-60 group-hover:opacity-100" />
+                            <Clock size={13} />
                             <span>{trip.scheduledTime || 'Orario N/D'}</span>
                           </div>
                           {trip.date && (
@@ -487,17 +577,39 @@ export default function PlanningClient({
                 </div>
               </div>
 
-              {/* COLONNE AUTISTI PER IL GIORNO SELEZIONATO */}
+              {/* COLONNE AUTISTI PER IL GIORNO SELEZIONATO (DROP TARGET PER ASSEGNARE AD AUTISTA) */}
               {initialDrivers.map((driver: any) => {
                 const driverTrips = currentDayTrips
                   .filter((t: any) => t.driverId === driver.id)
                   .sort((a: any, b: any) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
                 
                 const avatar = getDriverAvatar(driver.name, driver.profilePicture);
+                const isOverThisDriver = dragOverTarget === `driver-${driver.id}`;
 
                 return (
-                  <div key={driver.id} className="w-80 xl:w-84 flex-shrink-0 flex flex-col h-full bg-[var(--color-saggin-bg)]/40">
-                    
+                  <div 
+                    key={driver.id}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      setDragOverTarget(`driver-${driver.id}`);
+                    }}
+                    onDragLeave={() => {
+                      if (isOverThisDriver) setDragOverTarget(null);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const raw = e.dataTransfer.getData('text/plain');
+                      if (!raw) return;
+                      const data = JSON.parse(raw);
+                      handleMoveTrip(data.tripId, driver.id, selectedDayDateStr);
+                      setDragOverTarget(null);
+                    }}
+                    className={cn(
+                      "w-80 xl:w-84 flex-shrink-0 flex flex-col h-full transition-colors relative",
+                      isOverThisDriver ? "bg-red-50/70 ring-2 ring-inset ring-[var(--color-brand-red)]" : "bg-[var(--color-saggin-bg)]/40"
+                    )}
+                  >
                     {/* Header Autista */}
                     <div className="p-3.5 border-b border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] sticky top-0 z-10 flex items-center gap-2.5 shadow-2xs">
                       {avatar ? (
@@ -526,11 +638,19 @@ export default function PlanningClient({
                       </span>
                     </div>
 
+                    {/* Drop overlay helper quando si trascina */}
+                    {isOverThisDriver && (
+                      <div className="p-2 bg-red-100 text-[var(--color-brand-red)] text-xs font-bold text-center border-b border-red-200 animate-pulse">
+                        Rilascia per assegnare a {driver.name.split(' ')[0]}
+                      </div>
+                    )}
+
                     {/* Lista Viaggi Autista */}
                     <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
                       {driverTrips.length === 0 ? (
                         <div className="text-center py-10 px-4 border border-dashed border-slate-200 rounded-xl text-xs text-slate-400 font-medium bg-white/40">
                           Nessun viaggio programmato per oggi
+                          <br /><span className="text-[11px] text-slate-400">Trascina un viaggio qui per assegnarlo</span>
                         </div>
                       ) : (
                         driverTrips.map((trip: any) => {
@@ -540,12 +660,23 @@ export default function PlanningClient({
                           return (
                             <div 
                               key={trip.id}
+                              draggable={true}
+                              onDragStart={(e) => {
+                                e.dataTransfer.setData('text/plain', JSON.stringify({ tripId: trip.id, sourceDriverId: driver.id }));
+                                e.dataTransfer.effectAllowed = 'move';
+                                setDraggedTripId(trip.id);
+                              }}
+                              onDragEnd={() => {
+                                setDraggedTripId(null);
+                                setDragOverTarget(null);
+                              }}
                               onClick={() => handleTripClick(trip.id)}
                               className={cn(
-                                "bg-white border p-3.5 rounded-xl cursor-pointer transition-all hover:border-[var(--color-brand-red)] shadow-2xs hover:shadow-xs relative overflow-hidden group",
+                                "bg-white border p-3.5 rounded-xl cursor-grab active:cursor-grabbing transition-all hover:border-[var(--color-brand-red)] shadow-2xs hover:shadow-xs relative overflow-hidden group select-none",
                                 isInProgress ? "border-[var(--color-warning)] ring-1 ring-[var(--color-warning)]/30 bg-amber-50/10" :
                                 isCompleted ? "border-emerald-200 bg-emerald-50/10" :
-                                "border-[var(--color-saggin-border)]"
+                                "border-[var(--color-saggin-border)]",
+                                draggedTripId === trip.id && "opacity-40 ring-2 ring-[var(--color-brand-red)] scale-95"
                               )}
                             >
                               {/* Striscia di stato colorata */}
@@ -558,9 +689,12 @@ export default function PlanningClient({
                               
                               {/* Riga Superiore: Orario & Badge Stato */}
                               <div className="flex justify-between items-center mb-1.5 pl-1.5">
-                                <span className="font-bold font-space text-sm text-[var(--color-saggin-text-primary)]">
-                                  {trip.scheduledTime || 'Orario N/D'}
-                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <GripVertical size={13} className="text-slate-300 opacity-60 group-hover:opacity-100" />
+                                  <span className="font-bold font-space text-sm text-[var(--color-saggin-text-primary)]">
+                                    {trip.scheduledTime || 'Orario N/D'}
+                                  </span>
+                                </div>
                                 <StatusBadge status={trip.status} size="sm" />
                               </div>
                               
@@ -633,7 +767,7 @@ export default function PlanningClient({
         </div>
       )}
 
-      {/* CONTENUTO PLANNING: VISTA GRIGLIA SETTIMANALE (MATRICE COMPLETA) */}
+      {/* CONTENUTO PLANNING: VISTA GRIGLIA SETTIMANALE (MATRICE COMPLETA CON DRAG & DROP) */}
       {viewMode === 'matrix' && (
         <div className="flex-1 min-h-0 overflow-auto bg-[var(--color-saggin-surface)] rounded-2xl border border-[var(--color-saggin-border)] shadow-xs">
           {isLoading ? (
@@ -720,7 +854,7 @@ export default function PlanningClient({
                         </div>
                       </td>
 
-                      {/* 7 Celle dei Giorni */}
+                      {/* 7 Celle dei Giorni con Drag and Drop */}
                       {WEEK_DAYS.map((day, idx) => {
                         const cellDate = weekDates[idx];
                         const cellDateStr = formatLocalDateStr(cellDate);
@@ -729,15 +863,35 @@ export default function PlanningClient({
                           .filter(t => t.driverId === driver.id && formatLocalDateStr(t.date) === cellDateStr)
                           .sort((a, b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
 
+                        const cellTargetKey = `cell-${driver.id}-${cellDateStr}`;
+                        const isOverThisCell = dragOverTarget === cellTargetKey;
+
                         return (
                           <td 
                             key={day.id} 
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.dataTransfer.dropEffect = 'move';
+                              setDragOverTarget(cellTargetKey);
+                            }}
+                            onDragLeave={() => {
+                              if (isOverThisCell) setDragOverTarget(null);
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const raw = e.dataTransfer.getData('text/plain');
+                              if (!raw) return;
+                              const data = JSON.parse(raw);
+                              handleMoveTrip(data.tripId, driver.id, cellDateStr);
+                              setDragOverTarget(null);
+                            }}
                             className={cn(
-                              "p-2 border-r border-[var(--color-saggin-border)] last:border-r-0 align-top transition-colors group/cell",
-                              isToday && "bg-red-50/20"
+                              "p-2 border-r border-[var(--color-saggin-border)] last:border-r-0 align-top transition-colors group/cell relative",
+                              isToday && "bg-red-50/20",
+                              isOverThisCell && "bg-red-100/60 ring-2 ring-inset ring-[var(--color-brand-red)]"
                             )}
                           >
-                            <div className="space-y-1.5 min-h-[70px] flex flex-col justify-between">
+                            <div className="space-y-1.5 min-h-[75px] flex flex-col justify-between">
                               <div className="space-y-1.5">
                                 {cellTrips.map(trip => {
                                   const isDone = trip.status === 'COMPLETATO';
@@ -746,18 +900,32 @@ export default function PlanningClient({
                                   return (
                                     <div
                                       key={trip.id}
+                                      draggable={true}
+                                      onDragStart={(e) => {
+                                        e.dataTransfer.setData('text/plain', JSON.stringify({ tripId: trip.id, sourceDriverId: driver.id, sourceDate: cellDateStr }));
+                                        e.dataTransfer.effectAllowed = 'move';
+                                        setDraggedTripId(trip.id);
+                                      }}
+                                      onDragEnd={() => {
+                                        setDraggedTripId(null);
+                                        setDragOverTarget(null);
+                                      }}
                                       onClick={() => handleTripClick(trip.id)}
                                       className={cn(
-                                        "p-2 rounded-lg border text-xs cursor-pointer transition-all hover:shadow-xs",
+                                        "p-2 rounded-lg border text-xs cursor-grab active:cursor-grabbing transition-all hover:shadow-xs select-none",
                                         isWorking ? "bg-amber-50 border-amber-300 text-amber-900" :
                                         isDone ? "bg-emerald-50/70 border-emerald-200 text-emerald-900" :
-                                        "bg-white border-slate-200 hover:border-[var(--color-brand-red)] text-slate-800"
+                                        "bg-white border-slate-200 hover:border-[var(--color-brand-red)] text-slate-800",
+                                        draggedTripId === trip.id && "opacity-40 ring-2 ring-[var(--color-brand-red)] scale-95"
                                       )}
                                     >
                                       <div className="flex items-center justify-between gap-1 mb-1">
-                                        <span className="font-bold font-mono text-[11px]">
-                                          {trip.scheduledTime || '--:--'}
-                                        </span>
+                                        <div className="flex items-center gap-1">
+                                          <GripVertical size={11} className="text-slate-400" />
+                                          <span className="font-bold font-mono text-[11px]">
+                                            {trip.scheduledTime || '--:--'}
+                                          </span>
+                                        </div>
                                         {trip.needsCrane && (
                                           <span className="px-1 py-0.2 rounded text-[8px] font-extrabold bg-red-100 text-[var(--color-brand-red)]">
                                             GRU
