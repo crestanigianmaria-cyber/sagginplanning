@@ -41,10 +41,10 @@ async function main() {
   console.log('Seeding Autisti...');
   await prisma.driver.createMany({
     data: [
-      { name: 'Claudio', pin: pin1111, role: 'AUTISTA_UFFICIO' },
-      { name: 'Luca', pin: pin1111, role: 'AUTISTA_UFFICIO' },
-      { name: 'Marino', pin: pin1111, role: 'AUTISTA' },
-      { name: 'Francesco', pin: pin1111, role: 'AUTISTA' },
+      { name: 'Claudio', pin: pin1111, role: 'AUTISTA_UFFICIO', profilePicture: '/drivers/claudio.png' },
+      { name: 'Luca', pin: pin1111, role: 'AUTISTA_UFFICIO', profilePicture: '/drivers/luca.png' },
+      { name: 'Marino', pin: pin1111, role: 'AUTISTA', profilePicture: '/drivers/marino.png' },
+      { name: 'Francesco', pin: pin1111, role: 'AUTISTA', profilePicture: '/drivers/francesco.png' },
     ],
   });
 

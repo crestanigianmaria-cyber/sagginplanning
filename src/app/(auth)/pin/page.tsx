@@ -3,10 +3,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 
+import { cn, getDriverAvatar } from '@/lib/utils'
+
 type Driver = {
   id: string
   name: string
   initials: string
+  profilePicture?: string | null
 }
 
 export default function PinLoginPage() {
@@ -88,18 +91,29 @@ export default function PinLoginPage() {
       <div className="min-h-screen bg-[var(--color-saggin-bg)] p-6 text-[var(--color-saggin-text-primary)] flex flex-col">
         <h1 className="text-3xl font-semibold mt-12 mb-8 text-center">Chi sei?</h1>
         <div className="space-y-4 flex-1">
-          {drivers.map(d => (
-            <button
-              key={d.id}
-              onClick={() => setSelectedDriver(d)}
-              className="w-full bg-[var(--color-saggin-surface)]/10 hover:bg-[var(--color-saggin-surface)]/20 p-6 rounded-2xl flex items-center gap-6 active:scale-95 transition-transform"
-            >
-              <div className="w-16 h-16 rounded-full bg-[var(--color-brand-red)] text-white text-2xl font-semibold flex items-center justify-center">
-                {d.initials || d.name.substring(0, 2).toUpperCase()}
-              </div>
-              <span className="text-2xl font-medium">{d.name}</span>
-            </button>
-          ))}
+          {drivers.map(d => {
+            const avatar = getDriverAvatar(d.name, d.profilePicture);
+            return (
+              <button
+                key={d.id}
+                onClick={() => setSelectedDriver(d)}
+                className="w-full bg-[var(--color-saggin-surface)]/10 hover:bg-[var(--color-saggin-surface)]/20 p-6 rounded-2xl flex items-center gap-6 active:scale-95 transition-transform"
+              >
+                {avatar ? (
+                  <img 
+                    src={avatar} 
+                    alt={d.name} 
+                    className="w-16 h-16 rounded-full object-cover border-2 border-[var(--color-brand-red)] shadow-xs"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-[var(--color-brand-red)] text-white text-2xl font-semibold flex items-center justify-center">
+                    {d.initials || d.name.substring(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-2xl font-medium">{d.name}</span>
+              </button>
+            );
+          })}
           {drivers.length === 0 && (
             <div className="flex justify-center"><div className="animate-spin h-10 w-10 border-4 border-[var(--color-brand-red)] border-t-transparent rounded-full"></div></div>
           )}
@@ -107,6 +121,8 @@ export default function PinLoginPage() {
       </div>
     )
   }
+
+  const selectedAvatar = getDriverAvatar(selectedDriver.name, selectedDriver.profilePicture);
 
   return (
     <div className="min-h-screen bg-[var(--color-saggin-bg)] p-6 text-[var(--color-saggin-text-primary)] flex flex-col items-center justify-center relative">
@@ -118,9 +134,17 @@ export default function PinLoginPage() {
       </button>
 
       <div className="mb-12 flex flex-col items-center">
-        <div className="w-20 h-20 rounded-full bg-[var(--color-brand-red)] text-white text-3xl font-semibold flex items-center justify-center mb-6 ">
-          {selectedDriver.initials || selectedDriver.name.substring(0, 2).toUpperCase()}
-        </div>
+        {selectedAvatar ? (
+          <img 
+            src={selectedAvatar} 
+            alt={selectedDriver.name} 
+            className="w-20 h-20 rounded-full object-cover border-3 border-[var(--color-brand-red)] shadow-md mb-6"
+          />
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-[var(--color-brand-red)] text-white text-3xl font-semibold flex items-center justify-center mb-6">
+            {selectedDriver.initials || selectedDriver.name.substring(0, 2).toUpperCase()}
+          </div>
+        )}
         <h2 className="text-3xl font-medium">Ciao, {selectedDriver.name}</h2>
         <p className="text-[var(--color-saggin-text-primary)]/60 mt-2">Inserisci il tuo PIN</p>
       </div>

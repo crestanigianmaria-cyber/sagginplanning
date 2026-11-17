@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 export async function GET() {
   const drivers = await prisma.driver.findMany({
     where: { status: 'ATTIVO' },
-    select: { id: true, name: true }
+    select: { id: true, name: true, profilePicture: true }
   });
   
   return NextResponse.json(drivers.map(d => {
@@ -13,7 +13,8 @@ export async function GET() {
     return {
       id: d.id,
       name: d.name,
-      initials: initials.toUpperCase()
+      initials: initials.toUpperCase(),
+      profilePicture: d.profilePicture
     };
   }));
 }

@@ -330,12 +330,12 @@ INSERT INTO "OfficeUser" ("id", "name", "email", "passwordHash", "role", "isActi
   ('usr_admin', 'Amministratore', 'admin@saggin.it', '$2b$10$tM2Wql3SAu2Zbby7Eu5Do.ZwCpdtpdBa3Aud3..LGJeda84BqlLiq', 'ADMIN', true, NOW(), NOW())
 ON CONFLICT ("email") DO NOTHING;
 
-INSERT INTO "Driver" ("id", "name", "pin", "role", "status", "createdAt", "updatedAt") VALUES
-  ('drv_claudio', 'Claudio', '$2b$10$Kkh6RFVXHm4AfMThVe5EF.qrniFzbMMzuX2UTKxd2fap.SphwTdiO', 'AUTISTA_UFFICIO', 'ATTIVO', NOW(), NOW()),
-  ('drv_luca', 'Luca', '$2b$10$Kkh6RFVXHm4AfMThVe5EF.qrniFzbMMzuX2UTKxd2fap.SphwTdiO', 'AUTISTA_UFFICIO', 'ATTIVO', NOW(), NOW()),
-  ('drv_marino', 'Marino', '$2b$10$Kkh6RFVXHm4AfMThVe5EF.qrniFzbMMzuX2UTKxd2fap.SphwTdiO', 'AUTISTA', 'ATTIVO', NOW(), NOW()),
-  ('drv_francesco', 'Francesco', '$2b$10$Kkh6RFVXHm4AfMThVe5EF.qrniFzbMMzuX2UTKxd2fap.SphwTdiO', 'AUTISTA', 'ATTIVO', NOW(), NOW())
-ON CONFLICT ("id") DO NOTHING;
+INSERT INTO "Driver" ("id", "name", "pin", "role", "status", "profilePicture", "createdAt", "updatedAt") VALUES
+  ('drv_claudio', 'Claudio', '$2b$10$Kkh6RFVXHm4AfMThVe5EF.qrniFzbMMzuX2UTKxd2fap.SphwTdiO', 'AUTISTA_UFFICIO', 'ATTIVO', '/drivers/claudio.png', NOW(), NOW()),
+  ('drv_luca', 'Luca', '$2b$10$Kkh6RFVXHm4AfMThVe5EF.qrniFzbMMzuX2UTKxd2fap.SphwTdiO', 'AUTISTA_UFFICIO', 'ATTIVO', '/drivers/luca.png', NOW(), NOW()),
+  ('drv_marino', 'Marino', '$2b$10$Kkh6RFVXHm4AfMThVe5EF.qrniFzbMMzuX2UTKxd2fap.SphwTdiO', 'AUTISTA', 'ATTIVO', '/drivers/marino.png', NOW(), NOW()),
+  ('drv_francesco', 'Francesco', '$2b$10$Kkh6RFVXHm4AfMThVe5EF.qrniFzbMMzuX2UTKxd2fap.SphwTdiO', 'AUTISTA', 'ATTIVO', '/drivers/francesco.png', NOW(), NOW())
+ON CONFLICT ("id") DO UPDATE SET "profilePicture" = EXCLUDED."profilePicture";
 
 INSERT INTO "Vehicle" ("id", "name", "brand", "model", "licensePlate", "type", "maxExternalHeight", "maxExternalLength", "maxExternalWidth", "bedHeightFromGround", "internalBedLength", "internalBedWidth", "maxTransportableLength", "maxRearOverhang", "maxTransportableHeight", "payloadCapacity", "tare", "hasCrane", "craneModel", "craneMaxReach", "craneSide", "tailgateLiftCapacity", "towableLoad", "maxCraneAndTrailerLoad", "notes", "status", "createdAt", "updatedAt") VALUES
   ('veh_atego', 'MERCEDES ATEGO', 'Mercedes-Benz', 'Atego', 'DJ631BA', 'MOTRICE_CON_GRU', 3.30, 7.30, 2.52, 1.15, 4.40, 2.42, 9.50, 2.20, 2.85, 7500, 7500, true, 'Fassi F95AC.23', 7.40, 'lato guida', 2000, NULL, NULL, NULL, 'DISPONIBILE', NOW(), NOW()),
