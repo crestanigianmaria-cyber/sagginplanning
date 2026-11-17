@@ -6,6 +6,11 @@ export default withAuth(
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 
+    // Allow static image files in public/drivers/
+    if (/\.(png|jpg|jpeg|webp|svg|ico)$/i.test(path)) {
+      return NextResponse.next();
+    }
+
     // Office routes - require OFFICE userType or AUTISTA_UFFICIO role
     if (path.startsWith('/dashboard') || path.startsWith('/planning') || path.startsWith('/trips') || 
         path.startsWith('/vehicles') || path.startsWith('/drivers') ||
@@ -29,9 +34,10 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
         
-        // Public routes - always allowed
+        // Public routes and static driver avatar images - always allowed
         if (path.startsWith('/login') || path.startsWith('/pin') || 
             path.startsWith('/api/auth') || path.startsWith('/api/drivers/list') ||
+            /\.(png|jpg|jpeg|webp|svg|ico)$/i.test(path) ||
             path === '/') {
           return true;
         }
