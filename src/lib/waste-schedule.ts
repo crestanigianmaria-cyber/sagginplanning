@@ -75,49 +75,31 @@ export const WASTE_TYPE_META: Record<
 
 /**
  * Calendario ufficiale ritiro immondizie (Novembre 2026 – Gennaio 2027).
- * I promemoria "sera prima" vengono generati automaticamente al giorno precedente (collectionDate - 1 giorno).
+ * Contiene esattamente le 16 date confermate dall'utente.
+ * I promemoria "sera prima" vengono calcolati automaticamente al giorno precedente (collectionDate - 1 giorno).
  */
 export const WASTE_COLLECTION_SCHEDULE: WasteCollectionEntry[] = [
   // Novembre 2026
   { collectionDate: '2026-11-12', type: 'S', label: 'Secco (S)' },
   { collectionDate: '2026-11-13', type: 'PM', label: 'Plastica (PM)' },
-  { collectionDate: '2026-11-18', type: 'NESSUNO', label: 'Nessun ritiro di C, PM o S' },
-  { collectionDate: '2026-11-19', type: 'S', label: 'Secco (S)' },
-  { collectionDate: '2026-11-20', type: 'PM', label: 'Plastica (PM)' },
-  { collectionDate: '2026-11-24', type: 'C', label: 'Carta (C)' },
   { collectionDate: '2026-11-26', type: 'S', label: 'Secco (S)' },
   { collectionDate: '2026-11-27', type: 'PM', label: 'Plastica (PM)' },
 
   // Dicembre 2026
-  { collectionDate: '2026-12-01', type: 'C', label: 'Carta (C)' },
-  { collectionDate: '2026-12-03', type: 'S', label: 'Secco (S)' },
-  { collectionDate: '2026-12-04', type: 'PM', label: 'Plastica (PM)' },
   { collectionDate: '2026-12-08', type: 'C', label: 'Carta (C)' },
   { collectionDate: '2026-12-10', type: 'S', label: 'Secco (S)' },
   { collectionDate: '2026-12-11', type: 'PM', label: 'Plastica (PM)' },
-  { collectionDate: '2026-12-15', type: 'C', label: 'Carta (C)' },
-  { collectionDate: '2026-12-17', type: 'S', label: 'Secco (S)' },
-  { collectionDate: '2026-12-18', type: 'PM', label: 'Plastica (PM)' },
   { collectionDate: '2026-12-22', type: 'C', label: 'Carta (C)' },
   { collectionDate: '2026-12-24', type: 'S', label: 'Secco (S)' },
   { collectionDate: '2026-12-26', type: 'PM', label: 'Plastica (PM)' },
-  { collectionDate: '2026-12-31', type: 'S', label: 'Secco (S)' },
 
   // Gennaio 2027
-  { collectionDate: '2027-01-01', type: 'NESSUNO', label: 'Nessun ritiro di C, PM o S' },
-  { collectionDate: '2027-01-02', type: 'PM', label: 'Plastica (PM)' },
   { collectionDate: '2027-01-05', type: 'C', label: 'Carta (C)' },
   { collectionDate: '2027-01-07', type: 'S', label: 'Secco (S)' },
   { collectionDate: '2027-01-08', type: 'PM', label: 'Plastica (PM)' },
-  { collectionDate: '2027-01-13', type: 'NESSUNO', label: 'Nessun ritiro di C, PM o S' },
-  { collectionDate: '2027-01-14', type: 'S', label: 'Secco (S)' },
-  { collectionDate: '2027-01-15', type: 'PM', label: 'Plastica (PM)' },
   { collectionDate: '2027-01-19', type: 'C', label: 'Carta (C)' },
   { collectionDate: '2027-01-21', type: 'S', label: 'Secco (S)' },
   { collectionDate: '2027-01-22', type: 'PM', label: 'Plastica (PM)' },
-  { collectionDate: '2027-01-26', type: 'C', label: 'Carta (C)' },
-  { collectionDate: '2027-01-28', type: 'S', label: 'Secco (S)' },
-  { collectionDate: '2027-01-29', type: 'PM', label: 'Plastica (PM)' },
 ];
 
 export function shiftDateStr(dateStr: string, deltaDays: number): string {

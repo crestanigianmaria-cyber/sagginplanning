@@ -1337,23 +1337,6 @@ export default function PlanningClient({
                   </tbody>
                 </table>
               </div>
-
-              {/* Date segnalate senza ritiro */}
-              <div className="bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] rounded-xl p-3.5 text-xs text-[var(--color-saggin-text-secondary)]">
-                <div className="font-bold text-[var(--color-saggin-text-primary)] mb-1">
-                  Giorni senza ritiro di C, PM o S segnalati in calendario:
-                </div>
-                <div className="flex flex-wrap gap-2 mt-1.5">
-                  {WASTE_COLLECTION_SCHEDULE.filter((e) => e.type === 'NESSUNO').map((e) => (
-                    <span
-                      key={e.collectionDate}
-                      className="px-2.5 py-1 rounded-lg bg-white border border-[var(--color-saggin-border)] font-medium text-[11px]"
-                    >
-                      {formatItalianDateLong(e.collectionDate)} — Nessun ritiro C, PM o S
-                    </span>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
