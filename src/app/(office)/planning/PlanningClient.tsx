@@ -25,6 +25,7 @@ import { cn, getDriverAvatar } from '@/lib/utils';
 import StatusBadge from '@/components/shared/StatusBadge';
 import TripForm from '@/components/trips/TripForm';
 import {
+  type WasteCode,
   WASTE_TYPE_META,
   WASTE_COLLECTION_SCHEDULE,
   getEveningReminderForDate,
@@ -32,6 +33,7 @@ import {
   getAllEveningReminders,
   getItalyDateStr,
   formatItalianDateLong,
+  shiftDateStr,
 } from '@/lib/waste-schedule';
 
 const WEEK_DAYS = [
@@ -450,18 +452,42 @@ export default function PlanningClient({
                   )}
                 </div>
 
+                {/* Se oggi mattina c'è un ritiro (o nessun ritiro speciale) */}
+                {getCollectionEntryForDate(dayDateStr) && (
+                  <div className="mt-1 flex flex-col gap-0.5">
+                    {getCollectionEntryForDate(dayDateStr)?.type === 'NESSUNO' ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 w-fit">
+                        No ritiri C/PM/S
+                      </span>
+                    ) : (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border w-fit whitespace-nowrap shadow-2xs",
+                          isSelected
+                            ? WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].pillSelectedClass
+                            : WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].pillClass
+                        )}
+                        title={`Ritiro stamattina: ${WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].label}`}
+                      >
+                        <Trash2 size={10} className="shrink-0" />
+                        <span>Ritiro: {WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].label}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Se stasera bisogna portare fuori per domani */}
                 {wasteReminder && (
                   <span
                     className={cn(
-                      "mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border w-fit whitespace-nowrap shadow-2xs",
+                      "mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold border w-fit whitespace-nowrap shadow-2xs opacity-90",
                       isSelected
-                        ? WASTE_TYPE_META[wasteReminder.type].pillSelectedClass
-                        : WASTE_TYPE_META[wasteReminder.type].pillClass
+                        ? "bg-white/20 text-white border-white/40"
+                        : "bg-slate-100 text-slate-700 border-slate-300"
                     )}
-                    title={`${wasteReminder.eveningAction} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
+                    title={`Sera: portare fuori ${WASTE_TYPE_META[wasteReminder.type].label} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
                   >
-                    <Trash2 size={10} className="shrink-0" />
-                    <span>Sera: {WASTE_TYPE_META[wasteReminder.type].name}</span>
+                    <span>🌙 Sera: fuori {WASTE_TYPE_META[wasteReminder.type].name} ({wasteReminder.type})</span>
                   </span>
                 )}
               </button>
@@ -470,44 +496,74 @@ export default function PlanningClient({
         </div>
       )}
 
-      {/* PROMEMORIA SERALE IMMONDIZIE (GIORNO PRIMA DEL RITIRO) */}
-      {viewMode === 'columns' && selectedEveningReminder && (
-        <div className={cn(
-          "px-4 py-2.5 rounded-xl border flex flex-wrap items-center justify-between gap-2 shrink-0 shadow-2xs",
-          WASTE_TYPE_META[selectedEveningReminder.type].bannerClass
-        )}>
-          <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
-            <span className={cn(
-              "px-2.5 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 shrink-0 shadow-2xs",
-              WASTE_TYPE_META[selectedEveningReminder.type].accentBadgeClass
-            )}>
-              <Trash2 size={13} />
-              Promemoria Sera
-            </span>
-            <div className="text-xs sm:text-sm font-bold leading-snug">
-              {selectedDayDateStr === todayStr ? 'Stasera' : selectedEveningReminder.reminderDateFormatted}:{' '}
-              <span className="underline decoration-2 underline-offset-2">
-                {selectedEveningReminder.eveningAction}
-              </span>
-              <span className="font-medium opacity-80 ml-2">
-                (ritiro previsto domani {selectedEveningReminder.collectionDateFormatted.toLowerCase()})
-              </span>
+      {/* BANNER INFORMATIVO IMMONDIZIE DEL GIORNO SELEZIONATO */}
+      {viewMode === 'columns' && (selectedCollectionEntry || selectedEveningReminder) && (
+        <div className="px-4 py-2.5 rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
+          <div className="flex items-center gap-3 min-w-0 flex-wrap">
+            <div className="flex items-center gap-1.5 text-xs font-bold font-space text-[var(--color-saggin-text-primary)]">
+              <div className="p-1.5 rounded-lg bg-red-50 text-[var(--color-brand-red)] border border-red-200">
+                <Trash2 size={13} />
+              </div>
+              <span>Immondizie {selectedDayDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}:</span>
             </div>
+
+            {/* Ritiro del mattino per questo giorno */}
+            {selectedCollectionEntry && (
+              selectedCollectionEntry.type === 'NESSUNO' ? (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600 border border-slate-200">
+                    Mattina
+                  </span>
+                  <span className="font-semibold text-slate-600">Nessun ritiro di C, PM o S</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-slate-900 text-white shadow-2xs">
+                    Ritiro Mattina
+                  </span>
+                  <span className={cn(
+                    "px-2.5 py-0.5 rounded-full font-extrabold border text-[11px]",
+                    WASTE_TYPE_META[selectedCollectionEntry.type as WasteCode].pillClass
+                  )}>
+                    {WASTE_TYPE_META[selectedCollectionEntry.type as WasteCode].label}
+                  </span>
+                </div>
+              )
+            )}
+
+            {/* Separatore visivo se ci sono entrambi */}
+            {selectedCollectionEntry && selectedEveningReminder && (
+              <span className="text-slate-300 font-bold hidden sm:inline">•</span>
+            )}
+
+            {/* Promemoria della sera per domani */}
+            {selectedEveningReminder && (
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className={cn(
+                  "px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase text-white shadow-2xs",
+                  WASTE_TYPE_META[selectedEveningReminder.type].accentBadgeClass
+                )}>
+                  Sera Prima
+                </span>
+                <span className="font-bold text-[var(--color-saggin-text-primary)]">
+                  Stasera portare fuori:{' '}
+                  <span className="underline decoration-2 underline-offset-2">
+                    {selectedEveningReminder.eveningAction}
+                  </span>
+                </span>
+                <span className="text-slate-500 font-medium text-[11px]">
+                  (ritiro {selectedEveningReminder.collectionDateShort})
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {selectedCollectionEntry?.type === 'NESSUNO' && (
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white/80 border border-black/10 text-slate-700">
-                Oggi: nessun ritiro C/PM/S
-              </span>
-            )}
-            <button
-              onClick={() => setShowWasteModal(true)}
-              className="text-xs font-bold px-2.5 py-1 rounded-lg bg-white/85 hover:bg-white border border-black/15 transition-colors shadow-2xs"
-            >
-              Calendario completo &rarr;
-            </button>
-          </div>
+          <button
+            onClick={() => setShowWasteModal(true)}
+            className="text-xs font-bold px-2.5 py-1 rounded-lg bg-[var(--color-saggin-elevated)] hover:bg-slate-200 border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] transition-colors shadow-2xs shrink-0"
+          >
+            Calendario completo &rarr;
+          </button>
         </div>
       )}
 
@@ -914,16 +970,34 @@ export default function PlanningClient({
                               {totalDayTrips}
                             </span>
                           </div>
+
+                          {/* Se c'è un ritiro stamattina */}
+                          {getCollectionEntryForDate(dayDateStr) && (
+                            getCollectionEntryForDate(dayDateStr)?.type === 'NESSUNO' ? (
+                              <span className="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                                No ritiri C/PM/S
+                              </span>
+                            ) : (
+                              <span
+                                className={cn(
+                                  "mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border shadow-2xs",
+                                  WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].pillClass
+                                )}
+                                title={`Ritiro mattutino: ${WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].label}`}
+                              >
+                                <Trash2 size={10} className="shrink-0" />
+                                <span>Ritiro: {WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].shortLabel}</span>
+                              </span>
+                            )
+                          )}
+
+                          {/* Se stasera bisogna portare fuori */}
                           {wasteReminder && (
                             <span
-                              className={cn(
-                                "mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border shadow-2xs",
-                                WASTE_TYPE_META[wasteReminder.type].pillClass
-                              )}
-                              title={`${wasteReminder.eveningAction} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
+                              className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200"
+                              title={`Sera prima: portare fuori ${WASTE_TYPE_META[wasteReminder.type].label} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
                             >
-                              <Trash2 size={10} className="shrink-0" />
-                              <span>Sera: {WASTE_TYPE_META[wasteReminder.type].shortLabel}</span>
+                              <span>🌙 Sera: fuori {wasteReminder.type}</span>
                             </span>
                           )}
                         </div>
@@ -1169,55 +1243,93 @@ export default function PlanningClient({
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-[var(--color-saggin-elevated)] border-b border-[var(--color-saggin-border)] text-[11px] uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">
-                      <th className="p-3 font-bold">Sera da portare fuori (Promemoria)</th>
-                      <th className="p-3 font-bold">Cosa portare fuori</th>
-                      <th className="p-3 font-bold">Giorno di ritiro</th>
+                      <th className="p-3 font-bold">Data & Giorno di Ritiro</th>
+                      <th className="p-3 font-bold">Rifiuto da Raccogliere</th>
+                      <th className="p-3 font-bold">Promemoria: Da portare fuori la sera prima</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-saggin-border)]">
-                    {getAllEveningReminders().map((item) => {
-                      const isTodayReminder = item.reminderDate === todayStr;
-                      const isPast = item.reminderDate < todayStr;
-                      const meta = WASTE_TYPE_META[item.type];
+                    {WASTE_COLLECTION_SCHEDULE.map((entry) => {
+                      const isNone = entry.type === 'NESSUNO';
+                      const meta = isNone ? null : WASTE_TYPE_META[entry.type as WasteCode];
+                      const [y, m, d] = entry.collectionDate.split('-').map(Number);
+                      const collDt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+                      const collDateFormatted = collDt.toLocaleDateString('it-IT', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        timeZone: 'Europe/Rome',
+                      });
+                      const collDateCapitalized = collDateFormatted.charAt(0).toUpperCase() + collDateFormatted.slice(1);
+
+                      const prevDateStr = shiftDateStr(entry.collectionDate, -1);
+                      const [py, pm, pd] = prevDateStr.split('-').map(Number);
+                      const prevDt = new Date(Date.UTC(py, pm - 1, pd, 12, 0, 0));
+                      const prevDateFormatted = prevDt.toLocaleDateString('it-IT', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        timeZone: 'Europe/Rome',
+                      });
+                      const prevDateCapitalized = prevDateFormatted.charAt(0).toUpperCase() + prevDateFormatted.slice(1);
+                      const isTonight = prevDateStr === todayStr;
+                      const isTodayCollection = entry.collectionDate === todayStr;
 
                       return (
                         <tr
-                          key={`${item.reminderDate}-${item.type}`}
+                          key={entry.collectionDate}
                           onClick={() => {
-                            const [yy, mm, dd] = item.reminderDate.split('-').map(Number);
-                            const dt = new Date(yy, mm - 1, dd, 12, 0, 0);
-                            setCurrentDate(dt);
-                            setSelectedDay(dt.getDay() || 7);
+                            setCurrentDate(collDt);
+                            setSelectedDay(collDt.getDay() || 7);
                             setShowWasteModal(false);
                           }}
                           className={cn(
                             "cursor-pointer transition-colors hover:bg-slate-50",
-                            isTodayReminder && "bg-red-50/70 hover:bg-red-50",
-                            isPast && "opacity-55"
+                            isTonight && "bg-amber-50/70 hover:bg-amber-50",
+                            isTodayCollection && "bg-red-50/70 hover:bg-red-50"
                           )}
-                          title="Clicca per aprire questa settimana nel planning"
+                          title="Clicca per aprire questo giorno nel planning"
                         >
                           <td className="p-3 font-bold text-[var(--color-saggin-text-primary)]">
                             <div className="flex items-center gap-2">
-                              <span>{item.reminderDateFormatted} (sera)</span>
-                              {isTodayReminder && (
+                              <span>{collDateCapitalized}</span>
+                              {isTodayCollection && (
                                 <span className="px-1.5 py-0.5 rounded bg-[var(--color-brand-red)] text-white text-[9px] font-extrabold uppercase">
-                                  Stasera
+                                  Oggi Ritiro
                                 </span>
                               )}
                             </div>
                           </td>
                           <td className="p-3">
-                            <span className={cn(
-                              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-extrabold border text-[11px]",
-                              meta.pillClass
-                            )}>
-                              <Trash2 size={11} />
-                              <span>{meta.label}</span>
-                            </span>
+                            {isNone ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                                Nessun ritiro di C, PM o S
+                              </span>
+                            ) : (
+                              <span className={cn(
+                                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-extrabold border text-[11px]",
+                                meta!.pillClass
+                              )}>
+                                <Trash2 size={11} />
+                                <span>{entry.label}</span>
+                              </span>
+                            )}
                           </td>
                           <td className="p-3 text-[var(--color-saggin-text-secondary)] font-medium">
-                            {item.collectionDateFormatted}
+                            {isNone ? (
+                              <span className="text-slate-400 italic">Nessun promemoria necessario</span>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-slate-800">
+                                  {prevDateCapitalized} (sera)
+                                </span>
+                                {isTonight && (
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-500 text-white text-[9px] font-extrabold uppercase">
+                                    Stasera fuori!
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </td>
                         </tr>
                       );
