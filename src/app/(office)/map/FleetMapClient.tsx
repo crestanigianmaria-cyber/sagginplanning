@@ -47,8 +47,8 @@ export default function FleetMapClient() {
 
   useEffect(() => {
     fetchFleetData();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchFleetData, 30000);
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(fetchFleetData, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -158,6 +158,11 @@ export default function FleetMapClient() {
                 <div style="font-size: 10px; color: #64748b;">${driver.currentTrip.address}</div>
               </div>
             ` : '<div style="font-size: 11px; color: #94a3b8; font-style: italic;">Nessuna corsa attiva al momento</div>'}
+            ${driver.position?.lastUpdate ? `
+              <div style="font-size: 10px; color: #16a34a; font-weight: 600; margin-top: 4px;">
+                GPS aggiornato: ${new Date(driver.position.lastUpdate).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </div>
+            ` : ''}
           </div>
         `);
 

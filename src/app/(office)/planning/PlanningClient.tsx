@@ -113,6 +113,22 @@ export default function PlanningClient({
     fetchUnassignedTrips();
   }, [mondayStr]);
 
+  // Aggiornamento automatico silenzioso ogni 15s (pausa durante modali o drag-and-drop)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (showModal || draggedTripId) return;
+      fetch(`/api/trips?weekStart=${mondayStr}`)
+        .then(r => r.json())
+        .then(data => { if (data.success && Array.isArray(data.data)) setTrips(data.data); })
+        .catch(() => {});
+      fetch('/api/trips?unassigned=true')
+        .then(r => r.json())
+        .then(data => { if (data.success && Array.isArray(data.data)) setUnassignedTrips(data.data); })
+        .catch(() => {});
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [mondayStr, showModal, draggedTripId]);
+
   const changeWeek = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));

@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -9,6 +10,54 @@ import { cn, getDriverAvatar } from '@/lib/utils'
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession()
   const pathname = usePathname()
+  const [activeTripId, setActiveTripId] = useState<string | null>(null)
+  
+  const driverId = (session?.user as any)?.id
+
+  // Controlla se l'autista ha un viaggio IN_CORSO e attiva il GPS in background su qualsiasi pagina autista
+  useEffect(() => {
+    if (!driverId) return
+    const checkActiveTrip = () => {
+      fetch(`/api/trips?driverId=${driverId}`)
+        .then(r => r.json())
+        .then(res => {
+          const list = res?.success && Array.isArray(res.data) ? res.data : []
+          const active = list.find((t: any) => t.status === 'IN_CORSO')
+          setActiveTripId(active ? active.id : null)
+        })
+        .catch(() => {})
+    }
+    checkActiveTrip()
+    const checkInterval = setInterval(checkActiveTrip, 20000)
+    return () => clearInterval(checkInterval)
+  }, [driverId, pathname])
+
+  useEffect(() => {
+    if (!driverId || !activeTripId) return
+    const sendGps = () => {
+      if (typeof window === 'undefined' || !('geolocation' in navigator)) return
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          fetch('/api/gps/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tripId: activeTripId,
+              driverId,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: pos.coords.accuracy
+            })
+          }).catch(() => {})
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 }
+      )
+    }
+    sendGps()
+    const gpsInterval = setInterval(sendGps, 15000)
+    return () => clearInterval(gpsInterval)
+  }, [driverId, activeTripId])
   
   const today = new Date()
   const dateStr = today.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: 'long' })
@@ -53,6 +102,12 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
           })()}
 
           <div className="flex items-center gap-2.5">
+            {activeTripId && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                GPS Live
+              </span>
+            )}
             <div className="bg-white p-1 rounded-lg border border-[var(--color-saggin-border)] shrink-0 shadow-2xs">
               <img src="/logo.png" alt="Saggin Logo" className="h-6 w-6 object-contain" />
             </div>

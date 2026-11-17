@@ -34,7 +34,8 @@ export default function MyTripsPage() {
   const driverAvatar = getDriverAvatar(driverName, (session?.user as any)?.profilePicture)
 
   useEffect(() => {
-    if (driverId) {
+    if (!driverId) return
+    const loadTrips = () => {
       // Carichiamo TUTTI i viaggi assegnati a questo autista (senza restrizione rigida a un solo giorno UTC)
       fetch(`/api/trips?driverId=${driverId}`)
         .then(res => res.json())
@@ -48,6 +49,9 @@ export default function MyTripsPage() {
           setLoading(false)
         })
     }
+    loadTrips()
+    const interval = setInterval(loadTrips, 15000)
+    return () => clearInterval(interval)
   }, [driverId])
 
   if (loading) {

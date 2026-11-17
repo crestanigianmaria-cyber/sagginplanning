@@ -27,13 +27,25 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [hasUnread, setHasUnread] = useState(true);
+  const [liveToast, setLiveToast] = useState<any | null>(null);
+  const latestNotifIdRef = React.useRef<string | null>(null);
 
   const fetchNotifications = async () => {
     try {
       const res = await fetch('/api/notifications');
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
-        setNotifications(json.data);
+        const list = json.data;
+        if (list.length > 0) {
+          const newest = list[0];
+          if (latestNotifIdRef.current && latestNotifIdRef.current !== newest.id) {
+            setHasUnread(true);
+            setLiveToast(newest);
+            setTimeout(() => setLiveToast((cur: any) => (cur?.id === newest.id ? null : cur)), 6000);
+          }
+          latestNotifIdRef.current = newest.id;
+        }
+        setNotifications(list);
       }
     } catch (e) {
       console.error('Error fetching notifications:', e);
@@ -42,7 +54,7 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 20000);
+    const interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -349,6 +361,24 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
           </div>
         </main>
       </div>
+      {/* Live Toast Notifica in tempo reale */}
+      {liveToast && (
+        <div className="fixed bottom-5 right-5 z-50 max-w-sm bg-white border border-[var(--color-saggin-border)] shadow-xl rounded-2xl p-4 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-4">
+          <div className={cn(
+            "w-2.5 h-2.5 rounded-full mt-1.5 shrink-0",
+            liveToast.type === 'success' ? "bg-emerald-500" :
+            liveToast.type === 'warning' ? "bg-amber-500 animate-pulse" :
+            "bg-[var(--color-brand-red)]"
+          )} />
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-bold text-[var(--color-saggin-text-primary)]">{liveToast.title}</div>
+            <div className="text-[11px] text-[var(--color-saggin-text-secondary)] mt-0.5 line-clamp-2">{liveToast.message}</div>
+          </div>
+          <button onClick={() => setLiveToast(null)} className="text-slate-400 hover:text-slate-600 p-0.5">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

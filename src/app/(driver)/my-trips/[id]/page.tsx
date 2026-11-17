@@ -66,7 +66,11 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => {
     fetchTrip()
-  }, [id])
+    const interval = setInterval(() => {
+      if (!showEndModal) fetchTrip()
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [id, showEndModal])
 
   const fetchTrip = () => {
     fetch(`/api/trips/${id}`)
