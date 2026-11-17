@@ -396,7 +396,7 @@ export default function PlanningClient({
 
       {/* BARRA GIORNI DELLA SETTIMANA (Solo in modalità Giornaliera) */}
       {viewMode === 'columns' && (
-        <div className="bg-[var(--color-saggin-surface)] p-1.5 rounded-xl border border-[var(--color-saggin-border)] shadow-2xs shrink-0 flex items-center gap-1.5 overflow-x-auto">
+        <div className="bg-[var(--color-saggin-surface)] p-1.5 rounded-xl border border-[var(--color-saggin-border)] shadow-2xs shrink-0 flex items-stretch gap-1.5 overflow-x-auto">
           {WEEK_DAYS.map((day, idx) => {
             const isSelected = selectedDay === day.id;
             const dayDate = weekDates[idx];
@@ -410,60 +410,60 @@ export default function PlanningClient({
                 key={day.id}
                 onClick={() => setSelectedDay(day.id)}
                 className={cn(
-                  "flex-1 min-w-[135px] py-2 px-3 rounded-lg text-xs font-semibold transition-all border flex items-center justify-between gap-2 text-left relative overflow-hidden",
+                  "flex-1 min-w-[135px] py-2 px-2.5 rounded-lg text-xs font-semibold transition-all border flex flex-col justify-between gap-1 text-left relative overflow-hidden",
                   isSelected
                     ? "bg-[var(--color-brand-red)] text-white border-[var(--color-brand-red)] shadow-xs"
                     : "bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-secondary)] border-[var(--color-saggin-border)] hover:border-slate-400 hover:text-[var(--color-saggin-text-primary)]"
                 )}
               >
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className={cn("font-bold", isSelected ? "text-white" : "text-[var(--color-saggin-text-primary)]")}>
-                      {day.name}
-                    </span>
-                    {isToday && (
-                      <span className={cn(
-                        "text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded tracking-wider",
-                        isSelected ? "bg-white text-[var(--color-brand-red)]" : "bg-red-100 text-[var(--color-brand-red)]"
-                      )}>
-                        Oggi
-                      </span>
-                    )}
-                  </div>
+                <div className="flex items-center justify-between gap-1.5 w-full">
+                  <span className={cn("font-bold truncate", isSelected ? "text-white" : "text-[var(--color-saggin-text-primary)]")}>
+                    {day.name}
+                  </span>
+                  {/* Badge Conteggio Viaggi del Giorno */}
                   <span className={cn(
-                    "text-[11px] font-mono mt-0.5",
+                    "px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono shrink-0 whitespace-nowrap",
+                    isSelected 
+                      ? "bg-white/20 text-white" 
+                      : tripsCount > 0 
+                        ? "bg-slate-100 text-slate-700 border border-slate-200" 
+                        : "bg-slate-50 text-slate-300 border border-slate-100"
+                  )}>
+                    {tripsCount} {tripsCount === 1 ? 'corsa' : 'corse'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className={cn(
+                    "text-[11px] font-mono",
                     isSelected ? "text-white/90" : "text-slate-400"
                   )}>
                     {dayDate.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
                   </span>
-
-                  {wasteReminder && (
-                    <span
-                      className={cn(
-                        "mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border w-fit shadow-2xs",
-                        isSelected
-                          ? WASTE_TYPE_META[wasteReminder.type].pillSelectedClass
-                          : WASTE_TYPE_META[wasteReminder.type].pillClass
-                      )}
-                      title={`${wasteReminder.eveningAction} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
-                    >
-                      <Trash2 size={10} className="shrink-0" />
-                      <span>Sera: {WASTE_TYPE_META[wasteReminder.type].name}</span>
+                  {isToday && (
+                    <span className={cn(
+                      "text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded tracking-wider shrink-0",
+                      isSelected ? "bg-white text-[var(--color-brand-red)]" : "bg-red-100 text-[var(--color-brand-red)]"
+                    )}>
+                      Oggi
                     </span>
                   )}
                 </div>
 
-                {/* Badge Conteggio Viaggi del Giorno */}
-                <div className={cn(
-                  "px-2 py-0.5 rounded-full text-xs font-bold font-mono shrink-0 self-start",
-                  isSelected 
-                    ? "bg-white/20 text-white" 
-                    : tripsCount > 0 
-                      ? "bg-slate-100 text-slate-700 border border-slate-200" 
-                      : "bg-slate-50 text-slate-300 border border-slate-100"
-                )}>
-                  {tripsCount} {tripsCount === 1 ? 'corsa' : 'corse'}
-                </div>
+                {wasteReminder && (
+                  <span
+                    className={cn(
+                      "mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border w-fit whitespace-nowrap shadow-2xs",
+                      isSelected
+                        ? WASTE_TYPE_META[wasteReminder.type].pillSelectedClass
+                        : WASTE_TYPE_META[wasteReminder.type].pillClass
+                    )}
+                    title={`${wasteReminder.eveningAction} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
+                  >
+                    <Trash2 size={10} className="shrink-0" />
+                    <span>Sera: {WASTE_TYPE_META[wasteReminder.type].name}</span>
+                  </span>
+                )}
               </button>
             );
           })}
