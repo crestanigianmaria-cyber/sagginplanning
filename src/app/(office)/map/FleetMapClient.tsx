@@ -81,6 +81,7 @@ export default function FleetMapClient() {
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         mapRef.current = map;
+        setTimeout(() => map.invalidateSize(), 150);
       }
 
       const map = mapRef.current;
@@ -407,8 +408,8 @@ export default function FleetMapClient() {
         </div>
 
         {/* Right / Main Area: Interactive Leaflet Map Container */}
-        <div className="flex-1 bg-white rounded-2xl border border-[var(--color-saggin-border)] shadow-xs relative overflow-hidden min-h-[400px]">
-          <div id="fleet-map-container" className="w-full h-full z-10" />
+        <div className="flex-1 bg-white rounded-2xl border border-[var(--color-saggin-border)] shadow-xs relative overflow-hidden min-h-[420px] flex flex-col">
+          <div id="fleet-map-container" className="w-full flex-1 min-h-[420px] z-10" />
 
           {/* Map Overlay Legend in Top Right */}
           <div className="absolute top-3 right-3 z-20 bg-white/90 backdrop-blur-xs p-2.5 rounded-xl border border-slate-200 shadow-sm text-[10px] font-medium space-y-1.5">

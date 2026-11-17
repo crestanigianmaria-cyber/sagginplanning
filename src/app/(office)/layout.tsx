@@ -57,7 +57,7 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
     { name: 'Ore Lavoro', href: '/office-hours', icon: Clock },
   ];
 
-  const isPlanning = pathname.startsWith('/planning');
+  const isFullHeight = pathname.startsWith('/planning') || pathname.startsWith('/map');
 
   return (
     <div className="flex h-screen bg-[var(--color-saggin-bg)] text-[var(--color-saggin-text-primary)] overflow-hidden font-sans">
@@ -337,11 +337,11 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
         {/* Page Content */}
         <main className={cn(
           "flex-1 min-h-0 bg-[var(--color-saggin-bg)]",
-          isPlanning ? "overflow-hidden flex flex-col" : "overflow-y-auto"
+          isFullHeight ? "overflow-hidden flex flex-col" : "overflow-y-auto"
         )}>
           <div className={cn(
             "text-[var(--color-saggin-text-primary)]",
-            isPlanning 
+            isFullHeight 
               ? "w-full h-full p-3 lg:p-4 flex flex-col min-h-0" 
               : "p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto"
           )}>

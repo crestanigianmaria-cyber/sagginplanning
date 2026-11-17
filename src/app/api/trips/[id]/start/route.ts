@@ -17,6 +17,12 @@ export async function POST(request: NextRequest, { params }: any) {
       data: { status: 'IN_CORSO', actualStartTime: new Date(), startLatitude: latitude, startLongitude: longitude },
     });
 
+    if (latitude && longitude && existingTrip.driverId) {
+      await prisma.gpsTrackPoint.create({
+        data: { tripId: id, driverId: existingTrip.driverId, latitude, longitude }
+      });
+    }
+
     await prisma.tripAuditLog.create({
       data: { tripId: id, action: 'STATUS_CHANGE', fieldName: 'status', oldValue: existingTrip.status, newValue: 'IN_CORSO', driverIdActor: existingTrip.driverId, userType: 'DRIVER' },
     });

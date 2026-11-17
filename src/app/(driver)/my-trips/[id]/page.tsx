@@ -85,7 +85,7 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
       })
   }
 
-  // Timer interval when status is IN_CORSO
+  // Timer interval + Live GPS tracking when status is IN_CORSO
   useEffect(() => {
     if (!trip || trip.status !== 'IN_CORSO' || !trip.actualStartTime) return
 
@@ -95,10 +95,36 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
       setElapsedSeconds(Math.max(0, Math.floor((now - start) / 1000)))
     }
 
+    const sendGpsPoint = () => {
+      if (typeof window === 'undefined' || !('geolocation' in navigator) || !trip.driverId) return
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          fetch('/api/gps/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tripId: trip.id,
+              driverId: trip.driverId,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: pos.coords.accuracy
+            })
+          }).catch(() => {})
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 }
+      )
+    }
+
     calculateElapsed()
+    sendGpsPoint()
     const timer = setInterval(calculateElapsed, 1000)
-    return () => clearInterval(timer)
-  }, [trip?.status, trip?.actualStartTime])
+    const gpsInterval = setInterval(sendGpsPoint, 20000)
+    return () => {
+      clearInterval(timer)
+      clearInterval(gpsInterval)
+    }
+  }, [trip?.id, trip?.status, trip?.actualStartTime, trip?.driverId])
 
   const formatTimer = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600)

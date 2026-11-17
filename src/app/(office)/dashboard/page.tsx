@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
 
-  const [tripsToday, unassignedTrips, activeDrivers, availableVehicles] = await Promise.all([
+  const [tripsToday, unassignedTrips, activeDrivers, availableVehicles, activeTrips] = await Promise.all([
     prisma.trip.count({
       where: { date: { gte: today, lt: tomorrow }, status: { notIn: ['ANNULLATO'] } }
     }),
@@ -27,6 +27,12 @@ export default async function DashboardPage() {
     }),
     prisma.vehicle.count({
       where: { status: 'DISPONIBILE' }
+    }),
+    prisma.trip.findMany({
+      where: { status: 'IN_CORSO' },
+      include: { driver: true, vehicle: true },
+      orderBy: { actualStartTime: 'desc' },
+      take: 5
     })
   ])
 
@@ -102,12 +108,43 @@ export default async function DashboardPage() {
           </div>
         </div>
         
-        <div className="bg-[var(--color-saggin-surface)] p-6 rounded-xl border border-[var(--color-saggin-border)]">
-          <h2 className="text-lg font-bold font-space mb-4 text-[var(--color-saggin-text-primary)]">Viaggi in Corso (Live)</h2>
-          <div className="flex flex-col items-center justify-center h-40 text-[var(--color-saggin-text-secondary)]">
-            <Route className="h-8 w-8 mb-2 opacity-20" />
-            <p>Mappa live in sviluppo...</p>
+        <div className="bg-[var(--color-saggin-surface)] p-6 rounded-xl border border-[var(--color-saggin-border)] flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold font-space text-[var(--color-saggin-text-primary)] flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              Viaggi in Corso (Live)
+            </h2>
+            <Link href="/map" className="text-xs font-bold text-[var(--color-brand-red)] hover:underline">
+              Apri Mappa Flotta &rarr;
+            </Link>
           </div>
+          {activeTrips.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-32 text-[var(--color-saggin-text-secondary)] text-sm">
+              <Route className="h-7 w-7 mb-2 opacity-25" />
+              <p>Nessun viaggio attualmente in corso</p>
+              <Link href="/map" className="mt-2 text-xs font-semibold text-[var(--color-brand-red)] hover:underline">
+                Visualizza posizioni su Mappa Flotta
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {activeTrips.map((t) => (
+                <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--color-saggin-bg)] border border-[var(--color-saggin-border)]">
+                  <div className="min-w-0">
+                    <div className="font-semibold text-sm text-[var(--color-saggin-text-primary)] truncate">
+                      {t.driver?.name || 'Autista'} • {t.clientName || t.cargoDescription}
+                    </div>
+                    <div className="text-xs text-[var(--color-saggin-text-secondary)] truncate">
+                      {t.vehicle?.name || 'Mezzo N/D'} — {t.address}
+                    </div>
+                  </div>
+                  <span className="ml-3 shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                    IN CORSO
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       

@@ -10,18 +10,22 @@ export async function GET(request: NextRequest) {
       lng: 11.67734
     };
 
-    // Data odierna a mezzogiorno / intervallo oggi
+    // Data odierna con margine fuso orario (UTC vs Italia)
     const today = new Date();
     const startOfDay = new Date(today);
-    startOfDay.setHours(0, 0, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    startOfDay.setHours(startOfDay.getHours() - 3);
     const endOfDay = new Date(today);
-    endOfDay.setHours(23, 59, 59, 999);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+    endOfDay.setHours(endOfDay.getHours() + 3);
 
-    // 1. Tutti i viaggi programmati per oggi
+    // 1. Tutti i viaggi programmati per oggi + eventuali viaggi ancora IN_CORSO
     const tripsToday = await prisma.trip.findMany({
       where: {
-        date: { gte: startOfDay, lte: endOfDay },
-        status: { not: 'ANNULLATO' }
+        OR: [
+          { date: { gte: startOfDay, lte: endOfDay }, status: { not: 'ANNULLATO' } },
+          { status: 'IN_CORSO' }
+        ]
       },
       include: {
         driver: true,
