@@ -19,7 +19,11 @@ import {
   LayoutGrid, 
   ArrowRight,
   GripVertical,
-  Trash2
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  Minimize2,
+  Maximize2
 } from 'lucide-react';
 import { cn, getDriverAvatar } from '@/lib/utils';
 import StatusBadge from '@/components/shared/StatusBadge';
@@ -82,6 +86,7 @@ export default function PlanningClient({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showWasteModal, setShowWasteModal] = useState<boolean>(false);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState<boolean>(false);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedDriverForNewTrip, setSelectedDriverForNewTrip] = useState<string | undefined>(undefined);
   const [selectedDateForNewTrip, setSelectedDateForNewTrip] = useState<string | undefined>(undefined);
@@ -89,6 +94,23 @@ export default function PlanningClient({
   // Drag and drop state
   const [draggedTripId, setDraggedTripId] = useState<string | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('saggin_planning_header_collapsed');
+      if (saved === 'true') setIsHeaderCollapsed(true);
+    } catch {}
+  }, []);
+
+  const toggleHeaderCollapsed = () => {
+    setIsHeaderCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('saggin_planning_header_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   const weekDates = useMemo(() => getWeekDates(currentDate), [currentDate]);
   const mondayStr = useMemo(() => formatLocalDateStr(weekDates[0]), [weekDates]);
@@ -283,122 +305,201 @@ export default function PlanningClient({
   }, [selectedTripId, trips, unassignedTrips]);
 
   return (
-    <div className="h-full flex flex-col space-y-3 font-sans relative min-h-0">
+    <div className="h-full flex flex-col space-y-2 font-sans relative min-h-0">
       
       {/* BARRA DI CONTROLLO PLANNING PRINCIPALE */}
-      <div className="bg-[var(--color-saggin-surface)] px-4 py-2.5 rounded-xl border border-[var(--color-saggin-border)] shadow-2xs shrink-0 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+      <div className={cn(
+        "bg-[var(--color-saggin-surface)] rounded-xl border border-[var(--color-saggin-border)] shadow-2xs shrink-0 flex flex-wrap items-center justify-between gap-2 transition-all",
+        isHeaderCollapsed ? "px-2.5 py-1.5" : "px-3 py-2"
+      )}>
         
-        {/* Sinistra: Titolo, Badge e Tasto Nuovo Viaggio */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-red-50 text-[var(--color-brand-red)] rounded-lg border border-red-200">
-              <Calendar className="h-5 w-5 text-[var(--color-brand-red)]" />
-            </div>
-            <div>
+        {/* Sinistra: Titolo (solo se espansa), Nuovo Viaggio, Immondizie */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {!isHeaderCollapsed && (
+            <div className="flex items-center gap-2 pr-1">
+              <div className="p-1.5 bg-red-50 text-[var(--color-brand-red)] rounded-lg border border-red-200 hidden sm:flex">
+                <Calendar className="h-4 w-4 text-[var(--color-brand-red)]" />
+              </div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold font-space text-[var(--color-saggin-text-primary)] leading-tight">
+                <h1 className="text-sm lg:text-base font-bold font-space text-[var(--color-saggin-text-primary)] leading-tight whitespace-nowrap">
                   Planning Settimanale
                 </h1>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                  {totalWeekAssignedTrips} corse attive
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
+                  {totalWeekAssignedTrips} {totalWeekAssignedTrips === 1 ? 'corsa' : 'corse'}
                 </span>
               </div>
-              <p className="text-[11px] text-[var(--color-saggin-text-secondary)] font-medium">
-                Trascina le corse tra autisti o giorni con il mouse (Drag & Drop)
-              </p>
             </div>
-          </div>
+          )}
 
           <button 
             onClick={() => handleAddTrip(undefined, selectedDayDateStr)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-brand-red)] hover:bg-[#b91c1c] text-white text-xs font-bold rounded-lg shadow-2xs transition-all active:scale-95 ml-auto sm:ml-0"
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-[var(--color-brand-red)] hover:bg-[#b91c1c] text-white text-xs font-bold rounded-lg shadow-2xs transition-all active:scale-95 whitespace-nowrap"
           >
-            <Plus size={15} />
-            <span>Nuovo Viaggio</span>
+            <Plus size={14} />
+            <span>{isHeaderCollapsed ? 'Nuovo' : 'Nuovo Viaggio'}</span>
           </button>
 
           <button
             onClick={() => setShowWasteModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--color-saggin-elevated)] hover:bg-slate-200/80 text-[var(--color-saggin-text-primary)] border border-[var(--color-saggin-border)] text-xs font-bold rounded-lg transition-all"
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 border text-xs font-bold rounded-lg transition-all whitespace-nowrap",
+              (selectedCollectionEntry || selectedEveningReminder) && isHeaderCollapsed
+                ? "bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300"
+                : "bg-[var(--color-saggin-elevated)] hover:bg-slate-200/80 text-[var(--color-saggin-text-primary)] border-[var(--color-saggin-border)]"
+            )}
             title="Calendario promemoria immondizie (sera prima del ritiro)"
           >
-            <Trash2 size={14} className="text-[var(--color-brand-red)]" />
-            <span className="hidden sm:inline">Immondizie</span>
+            <Trash2 size={13} className="text-[var(--color-brand-red)] shrink-0" />
+            <span className="hidden md:inline">Immondizie</span>
+            {isHeaderCollapsed && selectedEveningReminder && (
+              <span className="text-[10px] font-extrabold text-amber-700">
+                (🌙 {selectedEveningReminder.type})
+              </span>
+            )}
           </button>
         </div>
         
-        {/* Centro: Navigatore Settimana */}
-        <div className="flex items-center gap-1 bg-[var(--color-saggin-elevated)] p-1 rounded-xl border border-[var(--color-saggin-border)] self-start xl:self-center">
-          <button 
-            onClick={() => changeWeek('prev')}
-            className="p-1.5 hover:bg-white rounded-lg text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all shadow-2xs"
-            title="Settimana precedente"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          
-          <span className="font-bold font-space text-xs px-3 min-w-[170px] text-center text-[var(--color-saggin-text-primary)]">
-            {getWeekString()}
-          </span>
-          
-          <button 
-            onClick={() => changeWeek('next')}
-            className="p-1.5 hover:bg-white rounded-lg text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all shadow-2xs"
-            title="Settimana successiva"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-          
-          <div className="w-px h-4 bg-[var(--color-saggin-border)] mx-0.5" />
-          
-          <button 
-            onClick={setToday}
-            className={cn(
-              "px-2.5 py-1 text-xs font-bold rounded-lg transition-colors border",
-              weekDates.some(d => formatLocalDateStr(d) === todayStr)
-                ? "text-[var(--color-brand-red)] bg-red-50/80 border-red-200 font-extrabold"
-                : "text-slate-600 hover:text-[var(--color-brand-red)] hover:bg-white border-transparent"
-            )}
-          >
-            Oggi
-          </button>
+        {/* Centro: Navigatore Settimana (+ Selettore Giorni Compatto quando barra è ridotta) */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-0.5 bg-[var(--color-saggin-elevated)] p-0.5 rounded-lg border border-[var(--color-saggin-border)]">
+            <button 
+              onClick={() => changeWeek('prev')}
+              className="p-1 hover:bg-white rounded-md text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all"
+              title="Settimana precedente"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            
+            <span className="font-bold font-space text-xs px-2 min-w-[140px] text-center text-[var(--color-saggin-text-primary)] whitespace-nowrap">
+              {getWeekString()}
+            </span>
+            
+            <button 
+              onClick={() => changeWeek('next')}
+              className="p-1 hover:bg-white rounded-md text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] transition-all"
+              title="Settimana successiva"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+            
+            <div className="w-px h-3.5 bg-[var(--color-saggin-border)] mx-0.5" />
+            
+            <button 
+              onClick={setToday}
+              className={cn(
+                "px-2 py-0.5 text-[11px] font-bold rounded-md transition-colors border",
+                weekDates.some(d => formatLocalDateStr(d) === todayStr)
+                  ? "text-[var(--color-brand-red)] bg-red-50/80 border-red-200 font-extrabold"
+                  : "text-slate-600 hover:text-[var(--color-brand-red)] hover:bg-white border-transparent"
+              )}
+            >
+              Oggi
+            </button>
+          </div>
+
+          {/* Selettore rapido giorni inline quando la parte sopra è compattata */}
+          {isHeaderCollapsed && viewMode === 'columns' && (
+            <div className="flex items-center gap-0.5 bg-[var(--color-saggin-elevated)] p-0.5 rounded-lg border border-[var(--color-saggin-border)] overflow-x-auto">
+              {WEEK_DAYS.map((day, idx) => {
+                const isSelected = selectedDay === day.id;
+                const dayDate = weekDates[idx];
+                const dayDateStr = formatLocalDateStr(dayDate);
+                const isToday = dayDateStr === todayStr;
+                const tripsCount = tripsCountByDay[day.id] || 0;
+
+                return (
+                  <button
+                    key={day.id}
+                    onClick={() => setSelectedDay(day.id)}
+                    className={cn(
+                      "px-2 py-0.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 whitespace-nowrap",
+                      isSelected
+                        ? "bg-[var(--color-brand-red)] text-white shadow-2xs"
+                        : isToday
+                          ? "bg-red-50 text-[var(--color-brand-red)] hover:bg-red-100"
+                          : "text-[var(--color-saggin-text-secondary)] hover:bg-white hover:text-[var(--color-saggin-text-primary)]"
+                    )}
+                    title={`${day.name} ${dayDate.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })} (${tripsCount} corse)`}
+                  >
+                    <span>{day.short}</span>
+                    <span className={cn("text-[10px] font-mono", isSelected ? "text-white/90" : "opacity-70")}>
+                      {dayDate.getDate()}
+                    </span>
+                    {tripsCount > 0 && (
+                      <span className={cn(
+                        "px-1 rounded text-[9px] font-mono",
+                        isSelected ? "bg-white/25 text-white" : "bg-slate-200 text-slate-700"
+                      )}>
+                        {tripsCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Destra: Switcher Visualizzazione (Giornaliera vs Griglia Settimanale) */}
-        <div className="flex items-center gap-1.5 bg-[var(--color-saggin-elevated)] p-1 rounded-xl border border-[var(--color-saggin-border)] self-start xl:self-center">
-          <button
-            onClick={() => setViewMode('columns')}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-              viewMode === 'columns'
-                ? "bg-white text-[var(--color-saggin-text-primary)] shadow-2xs border border-slate-200"
-                : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)]"
-            )}
-            title="Vista Giornaliera (Colonnare per autista)"
-          >
-            <Columns3 size={14} className={viewMode === 'columns' ? 'text-[var(--color-brand-red)]' : ''} />
-            <span>Vista Giornaliera</span>
-          </button>
+        {/* Destra: Switcher Visualizzazione + Riduci/Espandi Barra */}
+        <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 bg-[var(--color-saggin-elevated)] p-0.5 rounded-lg border border-[var(--color-saggin-border)]">
+            <button
+              onClick={() => setViewMode('columns')}
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all whitespace-nowrap",
+                viewMode === 'columns'
+                  ? "bg-white text-[var(--color-saggin-text-primary)] shadow-2xs border border-slate-200"
+                  : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)]"
+              )}
+              title="Vista Giornaliera (Colonnare per autista)"
+            >
+              <Columns3 size={13} className={viewMode === 'columns' ? 'text-[var(--color-brand-red)]' : ''} />
+              <span className="hidden sm:inline">{isHeaderCollapsed ? 'Giorno' : 'Giornaliera'}</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('matrix')}
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold transition-all whitespace-nowrap",
+                viewMode === 'matrix'
+                  ? "bg-white text-[var(--color-saggin-text-primary)] shadow-2xs border border-slate-200"
+                  : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)]"
+              )}
+              title="Griglia Settimanale (Matrice completa Autisti x Giorni)"
+            >
+              <LayoutGrid size={13} className={viewMode === 'matrix' ? 'text-[var(--color-brand-red)]' : ''} />
+              <span className="hidden sm:inline">{isHeaderCollapsed ? 'Settimana' : 'Griglia Settimana'}</span>
+            </button>
+          </div>
 
           <button
-            onClick={() => setViewMode('matrix')}
+            onClick={toggleHeaderCollapsed}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-              viewMode === 'matrix'
-                ? "bg-white text-[var(--color-saggin-text-primary)] shadow-2xs border border-slate-200"
-                : "text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)]"
+              "flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold border transition-all whitespace-nowrap",
+              isHeaderCollapsed
+                ? "bg-red-50 text-[var(--color-brand-red)] border-red-200 hover:bg-red-100"
+                : "bg-[var(--color-saggin-elevated)] text-[var(--color-saggin-text-secondary)] border-[var(--color-saggin-border)] hover:text-[var(--color-saggin-text-primary)] hover:bg-slate-200/70"
             )}
-            title="Griglia Settimanale (Matrice completa Autisti x Giorni)"
+            title={isHeaderCollapsed ? "Espandi controlli e barra giorni" : "Riduci la parte sopra per vedere più calendario"}
           >
-            <LayoutGrid size={14} className={viewMode === 'matrix' ? 'text-[var(--color-brand-red)]' : ''} />
-            <span>Griglia Settimana</span>
+            {isHeaderCollapsed ? (
+              <>
+                <ChevronDown size={14} />
+                <span className="hidden sm:inline">Espandi</span>
+              </>
+            ) : (
+              <>
+                <ChevronUp size={14} />
+                <span className="hidden sm:inline">Riduci sopra</span>
+              </>
+            )}
           </button>
         </div>
       </div>
 
-      {/* BARRA GIORNI DELLA SETTIMANA (Solo in modalità Giornaliera) */}
-      {viewMode === 'columns' && (
-        <div className="bg-[var(--color-saggin-surface)] p-1.5 rounded-xl border border-[var(--color-saggin-border)] shadow-2xs shrink-0 flex items-stretch gap-1.5 overflow-x-auto">
+      {/* BARRA GIORNI DELLA SETTIMANA (Solo in modalità Giornaliera e quando non è ridotta) */}
+      {viewMode === 'columns' && !isHeaderCollapsed && (
+        <div className="bg-[var(--color-saggin-surface)] p-1.5 rounded-xl border border-[var(--color-saggin-border)] shadow-2xs shrink-0 flex lg:grid lg:grid-cols-7 items-stretch gap-1.5 overflow-x-auto">
           {WEEK_DAYS.map((day, idx) => {
             const isSelected = selectedDay === day.id;
             const dayDate = weekDates[idx];
@@ -406,38 +507,42 @@ export default function PlanningClient({
             const isToday = dayDateStr === todayStr;
             const tripsCount = tripsCountByDay[day.id] || 0;
             const wasteReminder = getEveningReminderForDate(dayDateStr);
+            const collectionEntry = getCollectionEntryForDate(dayDateStr);
 
             return (
               <button
                 key={day.id}
                 onClick={() => setSelectedDay(day.id)}
                 className={cn(
-                  "flex-1 min-w-[135px] py-2 px-2.5 rounded-lg text-xs font-semibold transition-all border flex flex-col justify-between gap-1 text-left relative overflow-hidden",
+                  "flex-1 min-w-[115px] lg:min-w-0 py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-all border flex flex-col justify-between gap-1 text-left relative overflow-hidden",
                   isSelected
                     ? "bg-[var(--color-brand-red)] text-white border-[var(--color-brand-red)] shadow-xs"
                     : "bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-secondary)] border-[var(--color-saggin-border)] hover:border-slate-400 hover:text-[var(--color-saggin-text-primary)]"
                 )}
               >
-                <div className="flex items-center justify-between gap-1.5 w-full">
-                  <span className={cn("font-bold truncate", isSelected ? "text-white" : "text-[var(--color-saggin-text-primary)]")}>
+                <div className="flex items-center justify-between gap-1 w-full">
+                  <span className={cn("font-bold truncate text-xs", isSelected ? "text-white" : "text-[var(--color-saggin-text-primary)]")}>
                     {day.name}
                   </span>
                   {/* Badge Conteggio Viaggi del Giorno */}
-                  <span className={cn(
-                    "px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono shrink-0 whitespace-nowrap",
-                    isSelected 
-                      ? "bg-white/20 text-white" 
-                      : tripsCount > 0 
-                        ? "bg-slate-100 text-slate-700 border border-slate-200" 
-                        : "bg-slate-50 text-slate-300 border border-slate-100"
-                  )}>
-                    {tripsCount} {tripsCount === 1 ? 'corsa' : 'corse'}
+                  <span
+                    className={cn(
+                      "px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono shrink-0 whitespace-nowrap",
+                      isSelected 
+                        ? "bg-white/20 text-white" 
+                        : tripsCount > 0 
+                          ? "bg-slate-100 text-slate-700 border border-slate-200" 
+                          : "bg-slate-50 text-slate-400 border border-slate-100"
+                    )}
+                    title={`${tripsCount} ${tripsCount === 1 ? 'corsa assegnata' : 'corse assegnate'}`}
+                  >
+                    {tripsCount}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-1.5">
                   <span className={cn(
-                    "text-[11px] font-mono",
+                    "text-[11px] font-mono truncate",
                     isSelected ? "text-white/90" : "text-slate-400"
                   )}>
                     {dayDate.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
@@ -452,43 +557,44 @@ export default function PlanningClient({
                   )}
                 </div>
 
-                {/* Se oggi mattina c'è un ritiro (o nessun ritiro speciale) */}
-                {getCollectionEntryForDate(dayDateStr) && (
-                  <div className="mt-1 flex flex-col gap-0.5">
-                    {getCollectionEntryForDate(dayDateStr)?.type === 'NESSUNO' ? (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 w-fit">
-                        No ritiri C/PM/S
-                      </span>
-                    ) : (
+                {/* Indicatori compatti Immondizie (Ritiro e/o Sera) */}
+                {(collectionEntry || wasteReminder) && (
+                  <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                    {collectionEntry && (
+                      collectionEntry.type === 'NESSUNO' ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 truncate max-w-full">
+                          No ritiri
+                        </span>
+                      ) : (
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold border whitespace-nowrap shadow-2xs",
+                            isSelected
+                              ? WASTE_TYPE_META[collectionEntry.type as WasteCode].pillSelectedClass
+                              : WASTE_TYPE_META[collectionEntry.type as WasteCode].pillClass
+                          )}
+                          title={`Ritiro stamattina: ${WASTE_TYPE_META[collectionEntry.type as WasteCode].label}`}
+                        >
+                          <Trash2 size={9} className="shrink-0" />
+                          <span>Ritiro {WASTE_TYPE_META[collectionEntry.type as WasteCode].shortLabel}</span>
+                        </span>
+                      )
+                    )}
+
+                    {wasteReminder && (
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border w-fit whitespace-nowrap shadow-2xs",
+                          "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border whitespace-nowrap shadow-2xs opacity-95",
                           isSelected
-                            ? WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].pillSelectedClass
-                            : WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].pillClass
+                            ? "bg-white/20 text-white border-white/40"
+                            : "bg-slate-100 text-slate-700 border-slate-300"
                         )}
-                        title={`Ritiro stamattina: ${WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].label}`}
+                        title={`Sera: portare fuori ${WASTE_TYPE_META[wasteReminder.type].label} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
                       >
-                        <Trash2 size={10} className="shrink-0" />
-                        <span>Ritiro: {WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].label}</span>
+                        <span>🌙 {wasteReminder.type}</span>
                       </span>
                     )}
                   </div>
-                )}
-
-                {/* Se stasera bisogna portare fuori per domani */}
-                {wasteReminder && (
-                  <span
-                    className={cn(
-                      "mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold border w-fit whitespace-nowrap shadow-2xs opacity-90",
-                      isSelected
-                        ? "bg-white/20 text-white border-white/40"
-                        : "bg-slate-100 text-slate-700 border-slate-300"
-                    )}
-                    title={`Sera: portare fuori ${WASTE_TYPE_META[wasteReminder.type].label} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
-                  >
-                    <span>🌙 Sera: fuori {WASTE_TYPE_META[wasteReminder.type].name} ({wasteReminder.type})</span>
-                  </span>
                 )}
               </button>
             );
@@ -496,33 +602,27 @@ export default function PlanningClient({
         </div>
       )}
 
-      {/* BANNER INFORMATIVO IMMONDIZIE DEL GIORNO SELEZIONATO */}
-      {viewMode === 'columns' && (selectedCollectionEntry || selectedEveningReminder) && (
-        <div className="px-4 py-2.5 rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-2xs">
-          <div className="flex items-center gap-3 min-w-0 flex-wrap">
+      {/* BANNER INFORMATIVO IMMONDIZIE DEL GIORNO SELEZIONATO (Solo se barra non è ridotta) */}
+      {viewMode === 'columns' && !isHeaderCollapsed && (selectedCollectionEntry || selectedEveningReminder) && (
+        <div className="px-3 py-1.5 rounded-xl border border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] flex flex-wrap items-center justify-between gap-2 shrink-0 shadow-2xs">
+          <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
             <div className="flex items-center gap-1.5 text-xs font-bold font-space text-[var(--color-saggin-text-primary)]">
-              <div className="p-1.5 rounded-lg bg-red-50 text-[var(--color-brand-red)] border border-red-200">
-                <Trash2 size={13} />
+              <div className="p-1 rounded-md bg-red-50 text-[var(--color-brand-red)] border border-red-200">
+                <Trash2 size={12} />
               </div>
-              <span>Immondizie {selectedDayDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}:</span>
+              <span>Immondizie {selectedDayDate.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })}:</span>
             </div>
 
-            {/* Ritiro del mattino per questo giorno */}
             {selectedCollectionEntry && (
               selectedCollectionEntry.type === 'NESSUNO' ? (
-                <div className="flex items-center gap-1.5 text-xs">
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600 border border-slate-200">
-                    Mattina
-                  </span>
-                  <span className="font-semibold text-slate-600">Nessun ritiro di C, PM o S</span>
-                </div>
+                <span className="text-xs font-semibold text-slate-600">Nessun ritiro di C, PM o S</span>
               ) : (
                 <div className="flex items-center gap-1.5 text-xs">
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-slate-900 text-white shadow-2xs">
-                    Ritiro Mattina
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-900 text-white">
+                    Mattina
                   </span>
                   <span className={cn(
-                    "px-2.5 py-0.5 rounded-full font-extrabold border text-[11px]",
+                    "px-2 py-0.5 rounded-full font-extrabold border text-[11px]",
                     WASTE_TYPE_META[selectedCollectionEntry.type as WasteCode].pillClass
                   )}>
                     {WASTE_TYPE_META[selectedCollectionEntry.type as WasteCode].label}
@@ -531,22 +631,20 @@ export default function PlanningClient({
               )
             )}
 
-            {/* Separatore visivo se ci sono entrambi */}
             {selectedCollectionEntry && selectedEveningReminder && (
               <span className="text-slate-300 font-bold hidden sm:inline">•</span>
             )}
 
-            {/* Promemoria della sera per domani */}
             {selectedEveningReminder && (
               <div className="flex items-center gap-1.5 text-xs">
                 <span className={cn(
-                  "px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase text-white shadow-2xs",
+                  "px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase text-white",
                   WASTE_TYPE_META[selectedEveningReminder.type].accentBadgeClass
                 )}>
                   Sera Prima
                 </span>
                 <span className="font-bold text-[var(--color-saggin-text-primary)]">
-                  Stasera portare fuori:{' '}
+                  Stasera fuori:{' '}
                   <span className="underline decoration-2 underline-offset-2">
                     {selectedEveningReminder.eveningAction}
                   </span>
@@ -560,7 +658,7 @@ export default function PlanningClient({
 
           <button
             onClick={() => setShowWasteModal(true)}
-            className="text-xs font-bold px-2.5 py-1 rounded-lg bg-[var(--color-saggin-elevated)] hover:bg-slate-200 border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] transition-colors shadow-2xs shrink-0"
+            className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-[var(--color-saggin-elevated)] hover:bg-slate-200 border border-[var(--color-saggin-border)] text-[var(--color-saggin-text-primary)] transition-colors shrink-0"
           >
             Calendario completo &rarr;
           </button>
@@ -576,7 +674,7 @@ export default function PlanningClient({
               <p className="font-semibold text-sm">Aggiornamento planning in corso...</p>
             </div>
           ) : (
-            <div className="h-full flex min-w-max divide-x divide-[var(--color-saggin-border)]">
+            <div className="h-full flex min-w-full w-fit mx-auto justify-center divide-x divide-[var(--color-saggin-border)]">
               
               {/* COLONNA: VIAGGI DA ASSEGNARE (DROP TARGET PER RIMUOVERE ASSEGNAZIONE) */}
               <div 
@@ -597,20 +695,20 @@ export default function PlanningClient({
                   setDragOverTarget(null);
                 }}
                 className={cn(
-                  "w-80 xl:w-84 flex-shrink-0 flex flex-col h-full transition-colors relative",
+                  "w-[245px] lg:w-auto lg:flex-1 lg:min-w-[220px] lg:max-w-[310px] flex-shrink-0 flex flex-col h-full transition-colors relative",
                   dragOverTarget === 'unassigned' ? "bg-red-100/50 ring-2 ring-inset ring-[var(--color-brand-red)]" : "bg-red-50/20"
                 )}
               >
-                <div className="p-3.5 border-b border-red-200/80 bg-red-50/70 sticky top-0 z-10 flex items-center justify-between">
+                <div className="p-2.5 lg:p-3 border-b border-red-200/80 bg-red-50/70 sticky top-0 z-10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-red)] text-white flex items-center justify-center shadow-2xs">
-                      <AlertCircle size={16} />
+                    <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-red)] text-white flex items-center justify-center shadow-2xs shrink-0">
+                      <AlertCircle size={15} />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-xs font-space text-[var(--color-brand-red)] uppercase tracking-wider">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-xs font-space text-[var(--color-brand-red)] uppercase tracking-wider truncate">
                         Da Assegnare
                       </h3>
-                      <p className="text-[10px] text-red-600 font-medium">Trascina qui per disassegnare</p>
+                      <p className="text-[10px] text-red-600 font-medium truncate">Trascina qui</p>
                     </div>
                   </div>
 
@@ -758,25 +856,25 @@ export default function PlanningClient({
                       setDragOverTarget(null);
                     }}
                     className={cn(
-                      "w-80 xl:w-84 flex-shrink-0 flex flex-col h-full transition-colors relative",
+                      "w-[245px] lg:w-auto lg:flex-1 lg:min-w-[225px] lg:max-w-[360px] flex-shrink-0 flex flex-col h-full transition-colors relative",
                       isOverThisDriver ? "bg-red-50/70 ring-2 ring-inset ring-[var(--color-brand-red)]" : "bg-[var(--color-saggin-bg)]/40"
                     )}
                   >
                     {/* Header Autista */}
-                    <div className="p-3.5 border-b border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] sticky top-0 z-10 flex items-center gap-2.5 shadow-2xs">
+                    <div className="p-2.5 lg:p-3 border-b border-[var(--color-saggin-border)] bg-[var(--color-saggin-surface)] sticky top-0 z-10 flex items-center gap-2 shadow-2xs">
                       {avatar ? (
                         <img 
                           src={avatar} 
                           alt={driver.name} 
-                          className="w-10 h-10 rounded-full object-cover border-2 border-[var(--color-saggin-border)] shrink-0 shadow-2xs"
+                          className="w-9 h-9 rounded-full object-cover border-2 border-[var(--color-saggin-border)] shrink-0 shadow-2xs"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] flex items-center justify-center text-xs font-bold font-space text-[var(--color-saggin-text-primary)] shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] flex items-center justify-center text-xs font-bold font-space text-[var(--color-saggin-text-primary)] shrink-0">
                           {driver.name.charAt(0)}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-bold font-space text-sm text-[var(--color-saggin-text-primary)] truncate">
+                        <h3 className="font-bold font-space text-xs lg:text-sm text-[var(--color-saggin-text-primary)] truncate">
                           {driver.name}
                         </h3>
                         <p className="text-[11px] text-[var(--color-saggin-text-secondary)] flex items-center gap-1 mt-0.5 truncate font-medium">
@@ -785,7 +883,7 @@ export default function PlanningClient({
                         </p>
                       </div>
 
-                      <span className="text-xs font-bold font-mono px-2.5 py-0.5 rounded-full bg-[var(--color-saggin-elevated)] text-[var(--color-saggin-text-secondary)] border border-[var(--color-saggin-border)]">
+                      <span className="text-xs font-bold font-mono px-2 py-0.5 rounded-full bg-[var(--color-saggin-elevated)] text-[var(--color-saggin-text-secondary)] border border-[var(--color-saggin-border)] shrink-0">
                         {driverTrips.length}
                       </span>
                     </div>
@@ -798,9 +896,9 @@ export default function PlanningClient({
                     )}
 
                     {/* Lista Viaggi Autista */}
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+                    <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
                       {driverTrips.length === 0 ? (
-                        <div className="text-center py-10 px-4 border border-dashed border-slate-200 rounded-xl text-xs text-slate-400 font-medium bg-white/40">
+                        <div className="text-center py-8 px-3 border border-dashed border-slate-200 rounded-xl text-xs text-slate-400 font-medium bg-white/40">
                           Nessun viaggio programmato per oggi
                           <br /><span className="text-[11px] text-slate-400">Trascina un viaggio qui per assegnarlo</span>
                         </div>
@@ -824,7 +922,7 @@ export default function PlanningClient({
                               }}
                               onClick={() => handleTripClick(trip.id)}
                               className={cn(
-                                "bg-white border p-3.5 rounded-xl cursor-grab active:cursor-grabbing transition-all hover:border-[var(--color-brand-red)] shadow-2xs hover:shadow-xs relative overflow-hidden group select-none",
+                                "bg-white border p-3 rounded-xl cursor-grab active:cursor-grabbing transition-all hover:border-[var(--color-brand-red)] shadow-2xs hover:shadow-xs relative overflow-hidden group select-none",
                                 isInProgress ? "border-[var(--color-warning)] ring-1 ring-[var(--color-warning)]/30 bg-amber-50/10" :
                                 isCompleted ? "border-emerald-200 bg-emerald-50/10" :
                                 "border-[var(--color-saggin-border)]",
@@ -905,7 +1003,7 @@ export default function PlanningClient({
                       {/* Tasto Aggiungi Viaggio per questo autista */}
                       <button 
                         onClick={() => handleAddTrip(driver.id, selectedDayDateStr)}
-                        className="w-full py-2.5 border border-dashed border-[var(--color-saggin-border)] rounded-xl text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-brand-red)] hover:border-red-300 hover:bg-red-50/40 transition-all flex items-center justify-center gap-1.5 text-xs font-semibold"
+                        className="w-full py-2 border border-dashed border-[var(--color-saggin-border)] rounded-xl text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-brand-red)] hover:border-red-300 hover:bg-red-50/40 transition-all flex items-center justify-center gap-1.5 text-xs font-semibold"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         <span>Aggiungi per {driver.name.split(' ')[0]}</span>
@@ -928,10 +1026,10 @@ export default function PlanningClient({
               <p className="font-semibold text-sm">Caricamento matrice settimanale...</p>
             </div>
           ) : (
-            <table className="w-full border-collapse min-w-[1100px]">
+            <table className="w-full border-collapse min-w-[940px] table-fixed">
               <thead>
                 <tr className="border-b border-[var(--color-saggin-border)] bg-[var(--color-saggin-elevated)] sticky top-0 z-20">
-                  <th className="text-left p-3.5 text-xs font-bold text-[var(--color-saggin-text-primary)] font-space uppercase tracking-wider w-56 border-r border-[var(--color-saggin-border)] sticky left-0 bg-[var(--color-saggin-elevated)] z-30">
+                  <th className="text-left p-2.5 lg:p-3 text-xs font-bold text-[var(--color-saggin-text-primary)] font-space uppercase tracking-wider w-44 lg:w-48 border-r border-[var(--color-saggin-border)] sticky left-0 bg-[var(--color-saggin-elevated)] z-30">
                     Autista / Mezzo
                   </th>
                   {WEEK_DAYS.map((day, idx) => {
@@ -945,7 +1043,7 @@ export default function PlanningClient({
                       <th 
                         key={day.id} 
                         className={cn(
-                          "p-3 text-center border-r border-[var(--color-saggin-border)] last:border-r-0 min-w-[155px] align-top",
+                          "p-2 lg:p-2.5 text-center border-r border-[var(--color-saggin-border)] last:border-r-0 align-top",
                           isToday && "bg-red-50/50"
                         )}
                       >
@@ -974,18 +1072,18 @@ export default function PlanningClient({
                           {/* Se c'è un ritiro stamattina */}
                           {getCollectionEntryForDate(dayDateStr) && (
                             getCollectionEntryForDate(dayDateStr)?.type === 'NESSUNO' ? (
-                              <span className="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
-                                No ritiri C/PM/S
+                              <span className="mt-0.5 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                                No ritiri
                               </span>
                             ) : (
                               <span
                                 className={cn(
-                                  "mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border shadow-2xs",
+                                  "mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold border shadow-2xs",
                                   WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].pillClass
                                 )}
                                 title={`Ritiro mattutino: ${WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].label}`}
                               >
-                                <Trash2 size={10} className="shrink-0" />
+                                <Trash2 size={9} className="shrink-0" />
                                 <span>Ritiro: {WASTE_TYPE_META[getCollectionEntryForDate(dayDateStr)!.type as WasteCode].shortLabel}</span>
                               </span>
                             )
@@ -997,7 +1095,7 @@ export default function PlanningClient({
                               className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200"
                               title={`Sera prima: portare fuori ${WASTE_TYPE_META[wasteReminder.type].label} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
                             >
-                              <span>🌙 Sera: fuori {wasteReminder.type}</span>
+                              <span>🌙 Sera: {wasteReminder.type}</span>
                             </span>
                           )}
                         </div>
@@ -1013,13 +1111,13 @@ export default function PlanningClient({
                   return (
                     <tr key={driver.id} className="hover:bg-slate-50/50 transition-colors">
                       {/* Cella Info Autista */}
-                      <td className="p-3.5 border-r border-[var(--color-saggin-border)] sticky left-0 bg-[var(--color-saggin-surface)] z-10 shadow-xs">
-                        <div className="flex items-center gap-2.5">
+                      <td className="p-2.5 lg:p-3 border-r border-[var(--color-saggin-border)] sticky left-0 bg-[var(--color-saggin-surface)] z-10 shadow-xs">
+                        <div className="flex items-center gap-2">
                           {avatar ? (
                             <img 
                               src={avatar} 
                               alt={driver.name} 
-                              className="w-9 h-9 rounded-full object-cover border border-[var(--color-saggin-border)] shrink-0"
+                              className="w-8 h-8 rounded-full object-cover border border-[var(--color-saggin-border)] shrink-0"
                             />
                           ) : (
                             <div className="w-9 h-9 rounded-full bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] flex items-center justify-center text-xs font-bold font-space text-[var(--color-saggin-text-primary)] shrink-0">

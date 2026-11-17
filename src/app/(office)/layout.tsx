@@ -16,7 +16,9 @@ import {
   X,
   Search,
   Bell,
-  Trash2
+  Trash2,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -31,11 +33,41 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
   const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isSidebarHidden, setIsSidebarHidden] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [hasUnread, setHasUnread] = useState(true);
   const [liveToast, setLiveToast] = useState<any | null>(null);
   const latestNotifIdRef = React.useRef<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const savedHidden = localStorage.getItem('saggin_office_sidebar_hidden');
+      if (savedHidden === 'true') setIsSidebarHidden(true);
+      const savedCollapsed = localStorage.getItem('saggin_office_sidebar_collapsed');
+      if (savedCollapsed === 'true') setIsCollapsed(true);
+    } catch {}
+  }, []);
+
+  const toggleDesktopSidebarHidden = () => {
+    setIsSidebarHidden((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('saggin_office_sidebar_hidden', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const toggleDesktopSidebarCollapsed = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('saggin_office_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -94,22 +126,26 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
       {/* Sidebar (Clean White with 1px Border) */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-50 bg-[var(--color-saggin-surface)] border-r border-[var(--color-saggin-border)] text-[var(--color-saggin-text-secondary)] transition-all duration-200 ease-in-out md:static md:translate-x-0 flex flex-col shadow-xs",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
-          isCollapsed ? "md:w-18" : "md:w-64"
+          "fixed inset-y-0 left-0 z-50 bg-[var(--color-saggin-surface)] border-r border-[var(--color-saggin-border)] text-[var(--color-saggin-text-secondary)] transition-all duration-200 ease-in-out md:static flex flex-col shadow-xs overflow-hidden shrink-0",
+          sidebarOpen ? "translate-x-0 w-64" : "-translate-x-full w-64",
+          isSidebarHidden
+            ? "md:w-0 md:border-r-0 md:opacity-0 md:pointer-events-none md:translate-x-0"
+            : isCollapsed
+              ? "md:w-18 md:translate-x-0"
+              : "md:w-64 md:translate-x-0"
         )}
       >
         {/* Logo Section */}
         <div className={cn(
-          "flex h-16 items-center border-b border-[var(--color-saggin-border)] shrink-0 gap-3",
-          isCollapsed ? "justify-center px-2" : "px-5"
+          "flex h-12 md:h-14 items-center border-b border-[var(--color-saggin-border)] shrink-0 gap-3",
+          isCollapsed ? "justify-center px-2" : "px-4"
         )}>
           <div className="bg-white p-1 rounded-lg border border-[var(--color-saggin-border)] shrink-0 shadow-2xs">
-            <img src="/logo.png" alt="Saggin Logo" className="w-8 h-8 object-contain" />
+            <img src="/logo.png" alt="Saggin Logo" className="w-7 h-7 object-contain" />
           </div>
           {!isCollapsed && (
             <div className="min-w-0 flex-1">
-              <span className="text-xl font-bold font-space tracking-tight text-[var(--color-saggin-text-primary)]">Saggin</span>
+              <span className="text-lg font-bold font-space tracking-tight text-[var(--color-saggin-text-primary)]">Saggin</span>
               <span className="text-[10px] uppercase tracking-widest block text-[var(--color-brand-red)] font-bold -mt-1">Planning OS</span>
             </div>
           )}
@@ -122,8 +158,8 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
         </div>
 
         {/* Nav Links */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul className={cn("space-y-1.5", isCollapsed ? "px-2" : "px-3")}>
+        <nav className="flex-1 overflow-y-auto py-3">
+          <ul className={cn("space-y-1", isCollapsed ? "px-2" : "px-3")}>
             {navItems.map((item) => {
               const isActive = pathname.startsWith(item.href) && item.href !== '#';
               
@@ -175,15 +211,25 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
           </ul>
         </nav>
 
-        {/* Collapse toggle button on desktop */}
-        <div className="hidden md:flex items-center justify-center p-2 border-t border-[var(--color-saggin-border)]">
+        {/* Collapse / Close controls on desktop */}
+        <div className="hidden md:flex items-center gap-1.5 p-2 border-t border-[var(--color-saggin-border)]">
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-full py-1.5 px-2 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center justify-center gap-2"
-            title={isCollapsed ? "Espandi barra laterale" : "Riduci barra laterale"}
+            onClick={toggleDesktopSidebarCollapsed}
+            className="flex-1 py-1.5 px-2 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
+            title={isCollapsed ? "Espandi etichette menu" : "Riduci a sole icone"}
           >
             <span className="text-[11px]">{isCollapsed ? '→' : '← Riduci'}</span>
           </button>
+          {!isCollapsed && (
+            <button
+              onClick={toggleDesktopSidebarHidden}
+              className="py-1.5 px-2 text-xs font-semibold text-slate-500 hover:text-[var(--color-brand-red)] hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-1 whitespace-nowrap"
+              title="Chiudi completamente barra laterale"
+            >
+              <PanelLeftClose className="h-3.5 w-3.5" />
+              <span className="text-[11px]">Chiudi</span>
+            </button>
+          )}
         </div>
 
         {/* Sidebar Footer (User Profile & Logout) */}
@@ -236,25 +282,57 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-[var(--color-saggin-bg)]">
         
         {/* Topbar (Desktop & Mobile) */}
-        <header className="h-14 flex items-center justify-between px-4 md:px-6 bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] shrink-0 z-10 shadow-2xs">
-          <div className="flex items-center flex-1">
+        <header className="h-12 flex items-center justify-between px-3 md:px-4 bg-[var(--color-saggin-surface)] border-b border-[var(--color-saggin-border)] shrink-0 z-10 shadow-2xs">
+          <div className="flex items-center flex-1 gap-2 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] p-1.5 -ml-1 mr-3 rounded-lg md:hidden hover:bg-[var(--color-saggin-elevated)]"
+              className="text-[var(--color-saggin-text-secondary)] hover:text-[var(--color-saggin-text-primary)] p-1.5 -ml-1 rounded-lg md:hidden hover:bg-[var(--color-saggin-elevated)]"
+              title="Apri menu"
             >
               <Menu className="h-5 w-5" />
             </button>
 
+            {/* Desktop Toggle Sidebar (Chiudi / Riapri barra laterale) */}
+            <button
+              onClick={toggleDesktopSidebarHidden}
+              className={cn(
+                "hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-all shrink-0",
+                isSidebarHidden
+                  ? "bg-red-50 text-[var(--color-brand-red)] border-red-200 hover:bg-red-100 shadow-2xs"
+                  : "bg-[var(--color-saggin-elevated)] text-[var(--color-saggin-text-secondary)] border-[var(--color-saggin-border)] hover:text-[var(--color-saggin-text-primary)] hover:bg-slate-200/70"
+              )}
+              title={isSidebarHidden ? "Riapri barra laterale (Panoramica, Planning, Mappa, Flotta)" : "Chiudi barra laterale per avere più spazio"}
+            >
+              {isSidebarHidden ? (
+                <>
+                  <PanelLeftOpen className="h-4 w-4 shrink-0" />
+                  <span>Apri menu</span>
+                </>
+              ) : (
+                <>
+                  <PanelLeftClose className="h-4 w-4 shrink-0" />
+                  <span className="hidden lg:inline">Chiudi menu</span>
+                </>
+              )}
+            </button>
+
+            {isSidebarHidden && (
+              <div className="hidden md:flex items-center gap-2 pr-2 border-r border-[var(--color-saggin-border)] shrink-0">
+                <img src="/logo.png" alt="Saggin" className="w-5 h-5 object-contain" />
+                <span className="text-xs font-bold font-space text-[var(--color-saggin-text-primary)]">Saggin</span>
+              </div>
+            )}
+
             {/* Titolo Sezione */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1.5 shrink-0">
               <span className="text-xs font-medium text-[var(--color-saggin-text-secondary)]">Ufficio:</span>
-              <span className="text-sm font-bold font-space text-[var(--color-saggin-text-primary)]">
+              <span className="text-xs font-bold font-space text-[var(--color-saggin-text-primary)]">
                 {session?.user?.name || 'Operatore'}
               </span>
             </div>
             
             {/* Global Search */}
-            <div className="flex-1 max-w-md mx-auto ml-6 md:ml-10 hidden sm:block">
+            <div className="flex-1 max-w-md mx-auto ml-4 hidden sm:block">
               <div className="relative flex items-center w-full h-8.5 rounded-xl bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] focus-within:border-[var(--color-brand-red)] focus-within:bg-white transition-all px-3">
                 <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                 <input 
@@ -406,7 +484,7 @@ export default function OfficeLayout({ children }: { children: React.ReactNode }
           <div className={cn(
             "text-[var(--color-saggin-text-primary)]",
             isFullHeight 
-              ? "w-full h-full p-3 lg:p-4 flex flex-col min-h-0" 
+              ? "w-full h-full p-2 lg:p-2.5 flex flex-col min-h-0" 
               : "p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto"
           )}>
             {children}
