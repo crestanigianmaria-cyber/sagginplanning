@@ -18,11 +18,21 @@ import {
   Columns3, 
   LayoutGrid, 
   ArrowRight,
-  GripVertical
+  GripVertical,
+  Trash2
 } from 'lucide-react';
 import { cn, getDriverAvatar } from '@/lib/utils';
 import StatusBadge from '@/components/shared/StatusBadge';
 import TripForm from '@/components/trips/TripForm';
+import {
+  WASTE_TYPE_META,
+  WASTE_COLLECTION_SCHEDULE,
+  getEveningReminderForDate,
+  getCollectionEntryForDate,
+  getAllEveningReminders,
+  getItalyDateStr,
+  formatItalianDateLong,
+} from '@/lib/waste-schedule';
 
 const WEEK_DAYS = [
   { id: 1, name: 'Lunedì', short: 'Lun' },
@@ -69,6 +79,7 @@ export default function PlanningClient({
   const [unassignedTrips, setUnassignedTrips] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [showWasteModal, setShowWasteModal] = useState<boolean>(false);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedDriverForNewTrip, setSelectedDriverForNewTrip] = useState<string | undefined>(undefined);
   const [selectedDateForNewTrip, setSelectedDateForNewTrip] = useState<string | undefined>(undefined);
@@ -79,7 +90,7 @@ export default function PlanningClient({
 
   const weekDates = useMemo(() => getWeekDates(currentDate), [currentDate]);
   const mondayStr = useMemo(() => formatLocalDateStr(weekDates[0]), [weekDates]);
-  const todayStr = useMemo(() => formatLocalDateStr(new Date()), []);
+  const todayStr = useMemo(() => getItalyDateStr(), []);
 
   const fetchWeekTrips = async () => {
     setIsLoading(true);
@@ -243,6 +254,8 @@ export default function PlanningClient({
   // Viaggi filtrati per il giorno selezionato (nella vista a colonne)
   const selectedDayDate = weekDates[selectedDay - 1];
   const selectedDayDateStr = formatLocalDateStr(selectedDayDate);
+  const selectedEveningReminder = useMemo(() => getEveningReminderForDate(selectedDayDateStr), [selectedDayDateStr]);
+  const selectedCollectionEntry = useMemo(() => getCollectionEntryForDate(selectedDayDateStr), [selectedDayDateStr]);
   const currentDayTrips = useMemo(() => {
     return trips.filter(t => formatLocalDateStr(t.date) === selectedDayDateStr);
   }, [trips, selectedDayDateStr]);
@@ -300,6 +313,15 @@ export default function PlanningClient({
           >
             <Plus size={15} />
             <span>Nuovo Viaggio</span>
+          </button>
+
+          <button
+            onClick={() => setShowWasteModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--color-saggin-elevated)] hover:bg-slate-200/80 text-[var(--color-saggin-text-primary)] border border-[var(--color-saggin-border)] text-xs font-bold rounded-lg transition-all"
+            title="Calendario promemoria immondizie (sera prima del ritiro)"
+          >
+            <Trash2 size={14} className="text-[var(--color-brand-red)]" />
+            <span className="hidden sm:inline">Immondizie</span>
           </button>
         </div>
         
@@ -378,21 +400,23 @@ export default function PlanningClient({
           {WEEK_DAYS.map((day, idx) => {
             const isSelected = selectedDay === day.id;
             const dayDate = weekDates[idx];
-            const isToday = formatLocalDateStr(dayDate) === todayStr;
+            const dayDateStr = formatLocalDateStr(dayDate);
+            const isToday = dayDateStr === todayStr;
             const tripsCount = tripsCountByDay[day.id] || 0;
+            const wasteReminder = getEveningReminderForDate(dayDateStr);
 
             return (
               <button
                 key={day.id}
                 onClick={() => setSelectedDay(day.id)}
                 className={cn(
-                  "flex-1 min-w-[120px] py-2 px-3 rounded-lg text-xs font-semibold transition-all border flex items-center justify-between gap-2 text-left relative overflow-hidden",
+                  "flex-1 min-w-[135px] py-2 px-3 rounded-lg text-xs font-semibold transition-all border flex items-center justify-between gap-2 text-left relative overflow-hidden",
                   isSelected
                     ? "bg-[var(--color-brand-red)] text-white border-[var(--color-brand-red)] shadow-xs"
                     : "bg-[var(--color-saggin-surface)] text-[var(--color-saggin-text-secondary)] border-[var(--color-saggin-border)] hover:border-slate-400 hover:text-[var(--color-saggin-text-primary)]"
                 )}
               >
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className={cn("font-bold", isSelected ? "text-white" : "text-[var(--color-saggin-text-primary)]")}>
                       {day.name}
@@ -412,11 +436,26 @@ export default function PlanningClient({
                   )}>
                     {dayDate.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
                   </span>
+
+                  {wasteReminder && (
+                    <span
+                      className={cn(
+                        "mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold border w-fit shadow-2xs",
+                        isSelected
+                          ? WASTE_TYPE_META[wasteReminder.type].pillSelectedClass
+                          : WASTE_TYPE_META[wasteReminder.type].pillClass
+                      )}
+                      title={`${wasteReminder.eveningAction} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
+                    >
+                      <Trash2 size={10} className="shrink-0" />
+                      <span>Sera: {WASTE_TYPE_META[wasteReminder.type].name}</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* Badge Conteggio Viaggi del Giorno */}
                 <div className={cn(
-                  "px-2 py-0.5 rounded-full text-xs font-bold font-mono shrink-0",
+                  "px-2 py-0.5 rounded-full text-xs font-bold font-mono shrink-0 self-start",
                   isSelected 
                     ? "bg-white/20 text-white" 
                     : tripsCount > 0 
@@ -428,6 +467,47 @@ export default function PlanningClient({
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* PROMEMORIA SERALE IMMONDIZIE (GIORNO PRIMA DEL RITIRO) */}
+      {viewMode === 'columns' && selectedEveningReminder && (
+        <div className={cn(
+          "px-4 py-2.5 rounded-xl border flex flex-wrap items-center justify-between gap-2 shrink-0 shadow-2xs",
+          WASTE_TYPE_META[selectedEveningReminder.type].bannerClass
+        )}>
+          <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
+            <span className={cn(
+              "px-2.5 py-1 rounded-lg text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 shrink-0 shadow-2xs",
+              WASTE_TYPE_META[selectedEveningReminder.type].accentBadgeClass
+            )}>
+              <Trash2 size={13} />
+              Promemoria Sera
+            </span>
+            <div className="text-xs sm:text-sm font-bold leading-snug">
+              {selectedDayDateStr === todayStr ? 'Stasera' : selectedEveningReminder.reminderDateFormatted}:{' '}
+              <span className="underline decoration-2 underline-offset-2">
+                {selectedEveningReminder.eveningAction}
+              </span>
+              <span className="font-medium opacity-80 ml-2">
+                (ritiro previsto domani {selectedEveningReminder.collectionDateFormatted.toLowerCase()})
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {selectedCollectionEntry?.type === 'NESSUNO' && (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white/80 border border-black/10 text-slate-700">
+                Oggi: nessun ritiro C/PM/S
+              </span>
+            )}
+            <button
+              onClick={() => setShowWasteModal(true)}
+              className="text-xs font-bold px-2.5 py-1 rounded-lg bg-white/85 hover:bg-white border border-black/15 transition-colors shadow-2xs"
+            >
+              Calendario completo &rarr;
+            </button>
+          </div>
         </div>
       )}
 
@@ -800,14 +880,16 @@ export default function PlanningClient({
                   </th>
                   {WEEK_DAYS.map((day, idx) => {
                     const dayDate = weekDates[idx];
-                    const isToday = formatLocalDateStr(dayDate) === todayStr;
+                    const dayDateStr = formatLocalDateStr(dayDate);
+                    const isToday = dayDateStr === todayStr;
                     const totalDayTrips = tripsCountByDay[day.id] || 0;
+                    const wasteReminder = getEveningReminderForDate(dayDateStr);
 
                     return (
                       <th 
                         key={day.id} 
                         className={cn(
-                          "p-3 text-center border-r border-[var(--color-saggin-border)] last:border-r-0 min-w-[150px]",
+                          "p-3 text-center border-r border-[var(--color-saggin-border)] last:border-r-0 min-w-[155px] align-top",
                           isToday && "bg-red-50/50"
                         )}
                       >
@@ -832,6 +914,18 @@ export default function PlanningClient({
                               {totalDayTrips}
                             </span>
                           </div>
+                          {wasteReminder && (
+                            <span
+                              className={cn(
+                                "mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border shadow-2xs",
+                                WASTE_TYPE_META[wasteReminder.type].pillClass
+                              )}
+                              title={`${wasteReminder.eveningAction} (ritiro domani ${wasteReminder.collectionDateFormatted})`}
+                            >
+                              <Trash2 size={10} className="shrink-0" />
+                              <span>Sera: {WASTE_TYPE_META[wasteReminder.type].shortLabel}</span>
+                            </span>
+                          )}
                         </div>
                       </th>
                     );
@@ -1016,6 +1110,138 @@ export default function PlanningClient({
                 defaultDriverId={selectedDriverForNewTrip}
                 defaultDate={selectedDateForNewTrip || selectedDayDateStr}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CALENDARIO IMMONDIZIE (PROMEMORIA SERA PRIMA) */}
+      {showWasteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/50 backdrop-blur-xs"
+          onClick={() => setShowWasteModal(false)}
+        >
+          <div
+            className="bg-[var(--color-saggin-surface)] rounded-2xl w-full max-w-3xl max-h-[88vh] flex flex-col overflow-hidden border border-[var(--color-saggin-border)] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center px-6 py-4 border-b border-[var(--color-saggin-border)] shrink-0 bg-[var(--color-saggin-surface)]">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-50 text-[var(--color-brand-red)] rounded-xl border border-red-200">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold font-space text-[var(--color-saggin-text-primary)]">
+                    Calendario Immondizie &amp; Promemoria Sera
+                  </h2>
+                  <p className="text-xs text-[var(--color-saggin-text-secondary)]">
+                    I promemoria compaiono automaticamente il giorno prima del ritiro (Nov 2026 – Gen 2027)
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowWasteModal(false)}
+                className="w-9 h-9 rounded-full bg-[var(--color-saggin-elevated)] hover:bg-slate-200 text-[var(--color-saggin-text-primary)] flex items-center justify-center border border-[var(--color-saggin-border)] transition-colors shadow-2xs"
+                title="Chiudi calendario"
+              >
+                <X className="h-5 w-5 stroke-[2.5]" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {/* Legenda rapida */}
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-bold text-slate-500 mr-1">Tipologie:</span>
+                <span className={cn("px-2.5 py-1 rounded-full font-bold border", WASTE_TYPE_META.S.pillClass)}>
+                  S = Secco
+                </span>
+                <span className={cn("px-2.5 py-1 rounded-full font-bold border", WASTE_TYPE_META.PM.pillClass)}>
+                  PM = Plastica / Lattine
+                </span>
+                <span className={cn("px-2.5 py-1 rounded-full font-bold border", WASTE_TYPE_META.C.pillClass)}>
+                  C = Carta
+                </span>
+              </div>
+
+              {/* Tabella cronologica promemoria */}
+              <div className="border border-[var(--color-saggin-border)] rounded-xl overflow-hidden">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-[var(--color-saggin-elevated)] border-b border-[var(--color-saggin-border)] text-[11px] uppercase tracking-wider text-[var(--color-saggin-text-secondary)]">
+                      <th className="p-3 font-bold">Sera da portare fuori (Promemoria)</th>
+                      <th className="p-3 font-bold">Cosa portare fuori</th>
+                      <th className="p-3 font-bold">Giorno di ritiro</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--color-saggin-border)]">
+                    {getAllEveningReminders().map((item) => {
+                      const isTodayReminder = item.reminderDate === todayStr;
+                      const isPast = item.reminderDate < todayStr;
+                      const meta = WASTE_TYPE_META[item.type];
+
+                      return (
+                        <tr
+                          key={`${item.reminderDate}-${item.type}`}
+                          onClick={() => {
+                            const [yy, mm, dd] = item.reminderDate.split('-').map(Number);
+                            const dt = new Date(yy, mm - 1, dd, 12, 0, 0);
+                            setCurrentDate(dt);
+                            setSelectedDay(dt.getDay() || 7);
+                            setShowWasteModal(false);
+                          }}
+                          className={cn(
+                            "cursor-pointer transition-colors hover:bg-slate-50",
+                            isTodayReminder && "bg-red-50/70 hover:bg-red-50",
+                            isPast && "opacity-55"
+                          )}
+                          title="Clicca per aprire questa settimana nel planning"
+                        >
+                          <td className="p-3 font-bold text-[var(--color-saggin-text-primary)]">
+                            <div className="flex items-center gap-2">
+                              <span>{item.reminderDateFormatted} (sera)</span>
+                              {isTodayReminder && (
+                                <span className="px-1.5 py-0.5 rounded bg-[var(--color-brand-red)] text-white text-[9px] font-extrabold uppercase">
+                                  Stasera
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className={cn(
+                              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-extrabold border text-[11px]",
+                              meta.pillClass
+                            )}>
+                              <Trash2 size={11} />
+                              <span>{meta.label}</span>
+                            </span>
+                          </td>
+                          <td className="p-3 text-[var(--color-saggin-text-secondary)] font-medium">
+                            {item.collectionDateFormatted}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Date segnalate senza ritiro */}
+              <div className="bg-[var(--color-saggin-elevated)] border border-[var(--color-saggin-border)] rounded-xl p-3.5 text-xs text-[var(--color-saggin-text-secondary)]">
+                <div className="font-bold text-[var(--color-saggin-text-primary)] mb-1">
+                  Giorni senza ritiro di C, PM o S segnalati in calendario:
+                </div>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {WASTE_COLLECTION_SCHEDULE.filter((e) => e.type === 'NESSUNO').map((e) => (
+                    <span
+                      key={e.collectionDate}
+                      className="px-2.5 py-1 rounded-lg bg-white border border-[var(--color-saggin-border)] font-medium text-[11px]"
+                    >
+                      {formatItalianDateLong(e.collectionDate)} — Nessun ritiro C, PM o S
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -2,12 +2,24 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
-import { CalendarDays, Route, Truck, Users, AlertCircle } from 'lucide-react'
+import { CalendarDays, Route, Truck, Users, AlertCircle, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import {
+  WASTE_TYPE_META,
+  getEveningReminderForDate,
+  getUpcomingEveningReminders,
+  getItalyDateStr,
+} from '@/lib/waste-schedule'
+
+export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
   if (!session || (session.user as any)?.userType !== 'OFFICE') redirect('/')
+
+  const todayItaly = getItalyDateStr()
+  const todayWaste = getEveningReminderForDate(todayItaly)
+  const upcomingWaste = getUpcomingEveningReminders(todayItaly, 4)
 
   // Calcolo KPI della giornata
   const today = new Date()
@@ -42,6 +54,24 @@ export default async function DashboardPage() {
         <h1 className="text-3xl font-bold font-space text-[var(--color-saggin-text-primary)]">Panoramica Operativa</h1>
         <p className="text-[var(--color-saggin-text-secondary)] mt-2">Riepilogo delle operazioni di oggi per la flotta Saggin.</p>
       </div>
+
+      {todayWaste && (
+        <div className={`p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 ${WASTE_TYPE_META[todayWaste.type].bannerClass}`}>
+          <div className="flex items-center gap-3">
+            <span className={`px-3 py-1 rounded-lg text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${WASTE_TYPE_META[todayWaste.type].accentBadgeClass}`}>
+              <Trash2 className="h-4 w-4" />
+              Stasera Immondizie
+            </span>
+            <div>
+              <div className="text-sm font-bold">{todayWaste.eveningAction}</div>
+              <div className="text-xs opacity-80">Ritiro previsto domani {todayWaste.collectionDateFormatted.toLowerCase()}</div>
+            </div>
+          </div>
+          <Link href="/planning" className="text-xs font-bold px-3 py-1.5 rounded-lg bg-white/85 hover:bg-white border border-black/15 transition-colors">
+            Apri Planning &rarr;
+          </Link>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -148,6 +178,66 @@ export default async function DashboardPage() {
         </div>
       </div>
       
+      {/* Promemoria Raccolta Immondizie (Sera Prima) */}
+      <div className="bg-[var(--color-saggin-surface)] p-6 rounded-xl border border-[var(--color-saggin-border)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-red-50 text-[var(--color-brand-red)] rounded-lg border border-red-200">
+              <Trash2 className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold font-space text-[var(--color-saggin-text-primary)] leading-tight">
+                Promemoria Immondizie (Sera Prima del Ritiro)
+              </h2>
+              <p className="text-xs text-[var(--color-saggin-text-secondary)]">
+                Avvisi automatici per ricordare cosa portare fuori la sera prima della raccolta
+              </p>
+            </div>
+          </div>
+          <Link href="/planning" className="text-xs font-bold text-[var(--color-brand-red)] hover:underline">
+            Vedi nel Planning &rarr;
+          </Link>
+        </div>
+
+        {upcomingWaste.length === 0 ? (
+          <p className="text-sm text-[var(--color-saggin-text-secondary)]">
+            Nessun promemoria programmato nei prossimi giorni.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {upcomingWaste.map((item) => {
+              const isTonight = item.reminderDate === todayItaly
+              const meta = WASTE_TYPE_META[item.type]
+              return (
+                <div
+                  key={`${item.reminderDate}-${item.type}`}
+                  className={`p-3.5 rounded-xl border transition-all ${
+                    isTonight ? meta.bannerClass : 'bg-[var(--color-saggin-bg)] border-[var(--color-saggin-border)]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold border ${meta.pillClass}`}>
+                      {meta.label}
+                    </span>
+                    {isTonight && (
+                      <span className="px-1.5 py-0.5 rounded bg-[var(--color-brand-red)] text-white text-[9px] font-extrabold uppercase">
+                        Stasera
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs font-bold text-[var(--color-saggin-text-primary)]">
+                    {isTonight ? 'Oggi' : item.reminderDateFormatted} (sera)
+                  </div>
+                  <div className="text-[11px] text-[var(--color-saggin-text-secondary)] mt-0.5">
+                    Ritiro: {item.collectionDateShort}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }
