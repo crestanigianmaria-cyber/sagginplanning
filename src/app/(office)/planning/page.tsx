@@ -2,6 +2,8 @@ import React from 'react';
 import prisma from '@/lib/prisma';
 import PlanningClient from './PlanningClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PlanningPage() {
   const drivers = await prisma.driver.findMany({
     include: { defaultVehicle: true },

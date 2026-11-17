@@ -3,6 +3,8 @@ import { Users, Plus, Key, Edit, Phone, Truck, Clock, CheckCircle, Navigation } 
 import prisma from '@/lib/prisma';
 import { cn } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DriversPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);

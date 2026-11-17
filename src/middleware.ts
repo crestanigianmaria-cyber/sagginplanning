@@ -7,9 +7,9 @@ export default withAuth(
     const path = req.nextUrl.pathname;
 
     // Office routes - require OFFICE userType or AUTISTA_UFFICIO role
-    if (path.startsWith('/planning') || path.startsWith('/trips') || 
+    if (path.startsWith('/dashboard') || path.startsWith('/planning') || path.startsWith('/trips') || 
         path.startsWith('/vehicles') || path.startsWith('/drivers') ||
-        path.startsWith('/map') || path.startsWith('/reports')) {
+        path.startsWith('/map') || path.startsWith('/reports') || path.startsWith('/office-hours')) {
       if (token?.userType !== 'OFFICE' && token?.role !== 'AUTISTA_UFFICIO') {
         return NextResponse.redirect(new URL('/login', req.url));
       }
@@ -45,12 +45,14 @@ export default withAuth(
 
 export const config = {
   matcher: [
+    '/dashboard/:path*',
     '/planning/:path*',
     '/trips/:path*',
     '/vehicles/:path*',
     '/drivers/:path*',
     '/map/:path*',
     '/reports/:path*',
+    '/office-hours/:path*',
     '/my-trips/:path*',
     '/hours/:path*',
     '/profile/:path*',

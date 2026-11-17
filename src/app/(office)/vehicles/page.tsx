@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { Truck, Plus, CheckCircle, XCircle, Search, Anchor } from 'lucide-react';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export default async function VehiclesPage() {
   const vehicles = await prisma.vehicle.findMany({
     orderBy: { name: 'asc' }
